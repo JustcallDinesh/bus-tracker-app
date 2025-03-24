@@ -1,0 +1,53 @@
+{
+  "name": "bus-tracker",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~4.0.1",
+    "@expo/vector-icons": "^14.0.4",
+    "@mapbox/polyline": "^1.2.1",
+    "@react-native-async-storage/async-storage": "^2.1.1",
+    "@react-native-community/blur": "^4.4.1",
+    "@react-native-community/datetimepicker": "8.2.0",
+    "@react-native-picker/picker": "^2.11.0",
+    "@react-navigation/bottom-tabs": "^7.3.1",
+    "@react-navigation/material-top-tabs": "^7.1.1",
+    "@react-navigation/native": "^7.0.14",
+    "@react-navigation/stack": "^7.1.1",
+    "@supabase/supabase-js": "^2.48.1",
+    "axios": "^1.7.9",
+    "expo": "~52.0.37",
+    "expo-constants": "^17.0.7",
+    "expo-image-picker": "~16.0.6",
+    "expo-location": "^18.0.7",
+    "expo-notifications": "^0.29.13",
+    "expo-status-bar": "~2.0.1",
+    "form-data": "^4.0.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-native": "0.76.7",
+    "react-native-calendars": "^1.1310.0",
+    "react-native-elements": "^3.4.3",
+    "react-native-geolocation-service": "^5.3.1",
+    "react-native-image-picker": "^8.1.0",
+    "react-native-maps": "^1.20.1",
+    "react-native-permissions": "^5.2.5",
+    "react-native-safe-area-context": "^5.2.0",
+    "react-native-tab-view": "^4.0.5",
+    "react-native-walkthrough-tooltip": "^1.6.0",
+    "react-native-web": "~0.19.13"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@react-native-community/cli": "latest",
+    "@types/react": "~18.3.12",
+    "typescript": "^5.3.3"
+  },
+  "private": true
+}
