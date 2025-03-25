@@ -1,6 +1,5 @@
-Here , i created project named Bus tracker for rural area ,
-now the projects not fully completed .
-
+Here , I created project named Bus tracker app for rural area ,
+Now the projects not fully completed . Now
 i still have develope the project.
 
 thats RouteScreen or Home screen
