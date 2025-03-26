@@ -140,13 +140,12 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
           busRoute: updatedBusRoute,
           busStops: validBusStops,
         };
-
         setSelectedRoute(updatedSelectedRoute);
         const waypointsString = validBusStops.map((stop) => `${stop.latitude},${stop.longitude}`).join("|");
 
         try {
           const response = await axios.get(
-            `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&waypoints=${waypointsString}&key=AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI` // Replace YOUR_API_KEY
+            `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&waypoints=${waypointsString}&key=AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI`
           );
           // console.log(response);
 
