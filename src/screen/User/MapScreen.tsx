@@ -65,7 +65,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
         `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName},India&key=AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI` // Replace YOUR_API_KEY
       );
       if (geocodingResponse.data.results && geocodingResponse.data.results.length > 0) {
-        // console.log(`inside The helper Function${locationName}`,geocodingResponse.data.results[0].geometry.location);
+        // console.log(`inside The helper Function ${locationName}`, geocodingResponse.data.results[0].geometry.location);
         return geocodingResponse.data.results[0].geometry.location;
       } else {
         console.error(`Geocoding failed for ${locationName}`);
@@ -92,6 +92,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
             from.latitude = fromCoordinates.lat;
             from.longitude = fromCoordinates.lng;
             // console.log("From (after geocoding):", from); // Log updated from
+
           } else {
             console.log(`Could not geocode 'from' location: ${from.cityName}`); // Exit if geocoding fails for 'from'
           }
@@ -106,7 +107,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
             // console.log("To (after geocoding):", to); // Log updated to
           } else {
             console.error(`Could not geocode 'to' location: ${to.cityName}`);
-            return; // Exit if geocoding fails for 'to'
+            return;
           }
         }
 
@@ -147,7 +148,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
           const response = await axios.get(
             `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&waypoints=${waypointsString}&key=AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI` // Replace YOUR_API_KEY
           );
-          console.log(response);
+          // console.log(response);
 
 
 
@@ -156,8 +157,8 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
             const decodedPoints = decodePolyline(points);
             setDirections(decodedPoints);
 
-            const distanceInKm = response.data.routes[0].legs[0].distance.value;
-            console.log("DISTANCE", distanceInKm);
+
+
           }
 
         } catch (err) {

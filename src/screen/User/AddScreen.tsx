@@ -74,11 +74,14 @@ const AddScreen = () => {
   const [showFromTimePicker, setShowFromTimePicker] = useState(false);
   const [showToTimePicker, setShowToTimePicker] = useState(false);
 
+  const [routeDiasable, setRouteDiasble] = useState(false);
+
+  const [visibleAminities, setVisibleAminities] = useState(false);
+
   // console.log(fromDepartureTime.toLocaleTimeString());
 
   const busTypeOptions = [
     { label: "Normal ", value: "Normal " },
-    { label: "Government ", value: "Government " },
     { label: "Sleeper ", value: "Sleeper " },
     { label: "Semi-Sleeper ", value: "Semi-Sleeper " },
     { label: "AC Seater ", value: "AC Seater " },
@@ -191,7 +194,9 @@ const AddScreen = () => {
     };
 
     setBusRoute([...busRoute, newSegment]);
-
+    if (busRoute.length === 0) {
+      setRouteDiasble(true);
+    }
     setFromCityName("");
     setFromLatitude("");
     setFromLongitude("");
@@ -200,6 +205,17 @@ const AddScreen = () => {
     setToLatitude("");
     setToLongitude("");
 
+
+  };
+
+  const handleClearSegment = (index) => {
+    const updatedBusRoute = busRoute.filter((_, i) => i !== index);
+    setBusRoute(updatedBusRoute);
+    setRouteDiasble(false);
+  };
+  const handleClearStopSegment = (index) => {
+    const updatedBusStop = busStops.filter((_, i) => i !== index);
+    setBusStops(updatedBusStop);
   };
 
   const handleAddStop = () => {
@@ -259,6 +275,7 @@ const AddScreen = () => {
         setToArrivalTime(null);
         setBusStops([]);
         setisGovernt(true);
+        setRouteDiasble(false);
       } else {
         Alert.alert("Error", "Failed to add bus");
       }
@@ -296,7 +313,12 @@ const AddScreen = () => {
         value={busNumber}
         onChangeText={setBusNumber}
       />
-
+      <View style={styles.switchContainer}>
+        <Text style={styles.text}>
+          {isGovernt ? "Government Bus " : "Private Bus "}
+        </Text>
+        <Switch color="teal" value={isGovernt} onValueChange={setisGovernt} />
+      </View>
 
       <View style={styles.checkboxContainer}>
         <View style={styles.selectBusTitle}><Text style={styles.selectBusheader}>Select Bus Type </Text></View>
@@ -321,37 +343,35 @@ const AddScreen = () => {
           ))}
         </View>
       </View>
-
-      <View style={styles.checkboxContainer}>
-        <View style={styles.selectBusTitle}><Text style={styles.selectBusheader}>Amenities Features </Text></View>
-        <View style={styles.BusTypeAligh}>
-          {amenitiesOptions.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.checkboxOption,
-                amenities.includes(option.value) && styles.selectedOption,
-              ]}
-              onPress={() => {
-                if (amenities.includes(option.value)) {
-                  setAmenities(amenities.filter((type) => type !== option.value));
-                } else {
-                  setAmenities([...amenities, option.value]);
-                }
-              }}
-            >
-              <Text>{option.label}</Text>
-            </TouchableOpacity>
-          ))}
+      {isGovernt ? null : (
+        <View style={styles.checkboxContainer}>
+          <View style={styles.selectBusTitle}><Text style={styles.selectBusheader}>Amenities Features </Text></View>
+          <View style={styles.BusTypeAligh}>
+            {amenitiesOptions.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.checkboxOption,
+                  amenities.includes(option.value) && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  if (amenities.includes(option.value)) {
+                    setAmenities(amenities.filter((type) => type !== option.value));
+                  } else {
+                    setAmenities([...amenities, option.value]);
+                  }
+                }}
+              >
+                <Text>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
+      )}
 
-      <View style={styles.switchContainer}>
-        <Text style={styles.text}>
-          {isGovernt ? "Government Bus " : "Private Bus "}
-        </Text>
-        <Switch color="teal" value={isGovernt} onValueChange={setisGovernt} />
-      </View>
+
+
+
 
 
       <View style={styles.RouteContainer}>
@@ -493,12 +513,19 @@ const AddScreen = () => {
             <Text style={styles.font}>
               Segment {index + 1}: From ({segment.from.cityName}), To ({segment.to.cityName})
             </Text>
+            <TouchableOpacity
+              style={[styles.clearButton]}
+              onPress={() => handleClearSegment(index)}
+            >
+              <Text style={styles.clearButtonText}><Icon name="close-outline" size={14} /></Text>
+            </TouchableOpacity>
           </View>
         ))}
 
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, routeDiasable && styles.routeDiasablebutton]}
           onPress={handleAddRouteSegment}
+          disabled={routeDiasable}
         >
           <Text style={styles.buttonText}>Add Route Segment</Text>
         </TouchableOpacity>
@@ -553,7 +580,7 @@ const AddScreen = () => {
               placeholder="Stop Name,enter with dist"
               value={newStopName}
               onChangeText={setNewStopName}
-              keyboardType='ascii-capable'
+              keyboardType='name-phone-pad'
               keyboardAppearance='default'
             />
           </View>
@@ -582,9 +609,15 @@ const AddScreen = () => {
 
         {busStops.map((stop, index) => (
           <View key={index} style={styles.segmentItem}>
-            <Text>
+            <Text style={styles.stopstext}>
               Stop {index + 1}: {stop.name}
             </Text>
+            <TouchableOpacity
+              style={[styles.clearButton]}
+              onPress={() => handleClearStopSegment(index)}
+            >
+              <Text style={styles.clearButtonText}><Icon name="close-outline" size={14} /></Text>
+            </TouchableOpacity>
           </View>
         ))}
         <TouchableOpacity style={styles.button} onPress={handleAddStop}>
@@ -754,6 +787,18 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 10,
     marginTop: 0,
   },
+  routeDiasablebutton: {
+    backgroundColor: '#ccc',
+    padding: 15,
+    alignItems: "center",
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    marginTop: 0,
+    borderColor: 'rgba(34, 107, 63, 0.5)',
+    borderLeftWidth: 1,
+    borderBottomWidth: 1,
+    borderRightWidth: 1
+  },
   buttonText: {
     color: "white",
     fontSize: 16,
@@ -781,6 +826,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'teal',
     borderRadius: 5,
+    marginBottom: 10
     // backgroundColor: "#99BC85",//========================================
 
   },
@@ -806,7 +852,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     backgroundColor: '#FBA518',
     borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20
+    borderBottomLeftRadius: 20,
+    top: 4.5
   },
   buttonContent: {
     flexDirection: 'row',
@@ -886,11 +933,25 @@ const styles = StyleSheet.create({
     marginTop: 0,
     // marginBottom: 10,
     backgroundColor: 'rgba(34, 107, 63, 0.5)',
-
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
     borderWidth: 1,
     borderColor: "teal",
     padding: 10,
     // marginVertical: 5,
+  },
+  stopstext: {
+    color: 'black'
+  },
+  clearButton: {
+    backgroundColor: 'teal',
+    borderRadius: '50%',
+    // marginLeft: 10,
+  },
+  clearButtonText: {
+    padding: 5,
+    color: 'white',
   },
   font: {
     fontSize: 16,

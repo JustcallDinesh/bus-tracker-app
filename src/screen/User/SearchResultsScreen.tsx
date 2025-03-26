@@ -129,7 +129,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
     // Function to render amenities with icons
     const renderAmenities = () => {
       // console.log(route.amenities)
-      if (!route.amenities) {
+      if (!route.amenities || route.amenities.length === 0) {
         return null;
       }
       const amenitiesList = route.amenities.map((item: string) => item.trim());
@@ -183,7 +183,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
               {renderBusType()}
             </View>
             <View>
-              {renderAmenities()}
+              {selectedRoute.amenities && selectedRoute.amenities.length > 0 ? (renderAmenities()) : null}
             </View>
 
             {selectedRoute.busRoute && selectedRoute.busRoute.length > 0 && (
@@ -339,17 +339,18 @@ const SearchResultsScreen = ({ navigation, route }) => {
                 <Text style={styles.FromTo}>{item.busRoute[0].from.cityName}</Text>
                 <View style={styles.ConnectingLine} />
                 <View style={styles.distanceContainer}>
-                  <Text style={styles.distance}>23km </Text>
+                  <Text style={styles.distance}><Icon name="arrow-forward-outline" size={20} color="#fff" style={styles.icons} /></Text>
                 </View>
                 <View style={styles.ConnectingLine} />
                 <Text style={styles.FromTo}>{item.busRoute[0].to.cityName}</Text>
-                <Text style={styles.hours}>08h.30m</Text>
+                {/* <Text style={styles.hours}>08h.30m</Text> */}
               </View>
             )}
 
             <View style={styles.infoContainer}>
               <View style={styles.infoItem}>
                 <Icons name="seat-recline-extra" size={16} color="red" style={styles.icon} />
+
                 <Text style={styles.infoText}>Seats </Text>
               </View>
               <View style={styles.infoItem}>
@@ -367,7 +368,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
                 <Icon
                   name='chevron-down'
                   size={20}
-                  color="#000"
+                  color="#fff"
                 />
                 <Text style={styles.BusDetails} onPress={() => { setSelectedRoute(item); }}>View Bus Details </Text>
               </View>
@@ -412,14 +413,16 @@ const styles = StyleSheet.create({
   routeItem: {
     marginTop: 10,
     padding: 15,
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(34, 107, 63, 0.5)',
     marginBottom: 10,
     borderRadius: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    borderWidth: 1.5,
+    borderColor: 'teal',
+    // elevation: 10,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 3.84,
   },
   BusImage: {
     width: 200,
@@ -429,6 +432,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+
   },
   routeName: {
     fontSize: 10,
@@ -439,26 +443,30 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontSize: 18,
     fontWeight: 'bold',
+    letterSpacing: 1
   },
   BusNumber: {
     fontStyle: 'italic',
     fontWeight: 'bold',
     fontSize: 12,
-    color: 'gray',
+    color: '#fff',
     width: 300,
     flexWrap: 'wrap'
     // backgroundColor: 'red'
   },
   Busdiv: {
-    backgroundColor: '#FFB433',//orenge
+    backgroundColor: '#143D60',//orenge
     fontStyle: 'italic',
     fontWeight: 'bold',
     color: 'white',
     padding: 5,
-    borderRadius: 5,
+    borderRadius: 40,
     fontSize: 12,
     width: 60,
-    textAlign: 'center'
+    textAlign: 'center',
+    right: 12,
+    // borderWidth: 1,
+    // borderColor: 'teal'
   },
   Busdiv2: {
     backgroundColor: 'teal',
@@ -466,39 +474,48 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     padding: 5,
-    borderRadius: 5,
+    borderRadius: 40,
     fontSize: 12,
   },
   TimeInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     marginTop: 10,
+    // backgroundColor: 'red'
   },
   FromTo: {
     fontStyle: 'italic',
     fontWeight: 'bold',
-    fontSize: 18,
-    color: 'grey',
+    fontSize: 19,
+    color: '#fff',
+    borderWidth: .5,
+    borderColor: '#fff',
+    padding: 1,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    // backgroundColor: 'red',
+    minWidth: 120,
+    textAlign: 'center'
   },
   distanceContainer: {
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#fff',
   },
   distance: {
-    fontStyle: 'italic',
-    fontWeight: 'bold',
+    // fontStyle: 'italic',
+    // fontWeight: 'bold',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: 16,
-    color: '#666',
+    // fontSize: 16,
+    // color: '#fff',
   },
   ConnectingLine: {
     height: 1,
-    backgroundColor: '#ccc',
+    backgroundColor: '#fff',
     width: 20,
   },
   hours: {
@@ -507,11 +524,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'black',
     marginLeft: 'auto',
+    // backgroundColor: 'red'
   },
   bottomLieInFlat: {
     marginTop: 10,
-    borderTopColor: '#ccc',
-    borderTopWidth: 1,
+    borderTopColor: '#fff',
+    borderTopWidth: 2,
     // flexDirection: 'row',
     // backgroundColor: 'red',
     // alignItems: 'center',
@@ -529,7 +547,7 @@ const styles = StyleSheet.create({
   BusDetails: {
     fontStyle: 'italic',
     fontWeight: 'bold',
-    color: 'black',
+    color: '#fff',
     // marginTop: 5,
   },
   overlay: {
@@ -553,6 +571,7 @@ const styles = StyleSheet.create({
   },
 
   detailedViewContent: {
+
     flex: 1,
   },
   routeDetails: {
@@ -650,11 +669,18 @@ const styles = StyleSheet.create({
     borderRadius: 5,
 
   },
+  icons: {
+    // backgroundColor:'#ccc',
+    marginRight: 4,
+    padding: 6,
+    borderRadius: 5,
+
+  },
   infoText: {
     fontStyle: 'italic',
     fontWeight: 'bold',
     fontSize: 11,
-    color: "#666",
+    color: "#fff",
   },
   ratingContainer: {
     position: 'absolute',
@@ -913,12 +939,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap', // Allow wrapping to the next line
     marginTop: 6,
     marginBottom: 5,
-    backgroundColor: 'orange',
+    // backgroundColor: 'orange',
     padding: 10,
     borderRadius: 20,
     paddingHorizontal: 30,
     paddingBottom: -5,
-    elevation: 5
+    // elevation: 5
   },
   BusItem: {
     flexDirection: 'row',
@@ -927,15 +953,16 @@ const styles = StyleSheet.create({
     marginBottom: 7,
     height: 15,
     width: 60,
-    backgroundColor: '#fff',
+    backgroundColor: 'orange',
     // backgroundColor: 'yellow',
     justifyContent: 'center',
     // padding: 4,
-    borderRadius: 15,
+    borderRadius: 2,
     textAlign: 'center',
   },
   BusText: {
-    fontSize: 11,
+    fontSize: 12,
+    textTransform: 'uppercase',
     // width: 100,
     flex: 1,
     textAlign: 'center',
