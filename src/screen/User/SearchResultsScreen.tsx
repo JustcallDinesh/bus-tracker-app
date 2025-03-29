@@ -339,7 +339,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
                 <Text style={styles.FromTo}>{item.busRoute[0].from.cityName}</Text>
                 <View style={styles.ConnectingLine} />
                 <View style={styles.distanceContainer}>
-                  <Text style={styles.distance}><Icon name="arrow-forward-outline" size={20} color="#fff" style={styles.icons} /></Text>
+                  <Text style={styles.distance}><Icon name="arrow-forward-outline" size={20} color="#666" style={styles.icons} /></Text>
                 </View>
                 <View style={styles.ConnectingLine} />
                 <Text style={styles.FromTo}>{item.busRoute[0].to.cityName}</Text>
@@ -368,7 +368,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
                 <Icon
                   name='chevron-down'
                   size={20}
-                  color="#fff"
+                  color="#000"
                 />
                 <Text style={styles.BusDetails} onPress={() => { setSelectedRoute(item); }}>View Bus Details </Text>
               </View>
@@ -413,12 +413,12 @@ const styles = StyleSheet.create({
   routeItem: {
     marginTop: 10,
     padding: 15,
-    backgroundColor: 'rgba(34, 107, 63, 0.5)',
+    backgroundColor: '#fff',
     marginBottom: 10,
     borderRadius: 20,
-    borderWidth: 1.5,
+    borderWidth: .8,
     borderColor: 'teal',
-    // elevation: 10,
+    // elevation: 5,
     // shadowColor: '#000',
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.25,
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: 'bold',
     fontSize: 12,
-    color: '#fff',
+    color: '#666',
     width: 300,
     flexWrap: 'wrap'
     // backgroundColor: 'red'
@@ -488,9 +488,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: 'bold',
     fontSize: 19,
-    color: '#fff',
-    borderWidth: .5,
-    borderColor: '#fff',
+    color: '#000',
+    borderWidth: 1,
+    borderColor: '#666',
     padding: 1,
     paddingHorizontal: 10,
     borderRadius: 10,
@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#fff',
+    borderColor: '#666',
   },
   distance: {
     // fontStyle: 'italic',
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   },
   ConnectingLine: {
     height: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#666',
     width: 20,
   },
   hours: {
@@ -528,8 +528,8 @@ const styles = StyleSheet.create({
   },
   bottomLieInFlat: {
     marginTop: 10,
-    borderTopColor: '#fff',
-    borderTopWidth: 2,
+    borderTopColor: '#666',
+    borderTopWidth: 1,
     // flexDirection: 'row',
     // backgroundColor: 'red',
     // alignItems: 'center',
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   BusDetails: {
     fontStyle: 'italic',
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000',
     // marginTop: 5,
   },
   overlay: {
@@ -680,7 +680,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: 'bold',
     fontSize: 11,
-    color: "#fff",
+    color: "#666",
   },
   ratingContainer: {
     position: 'absolute',

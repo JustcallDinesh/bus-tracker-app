@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: '35%',
     left: '15%',
-    backgroundColor: 'rgba(5, 5, 5, 0.12)', // Optional: Add a semi-transparent background for content
+    // backgroundColor: 'rgba(5, 5, 5, 0.12)', // Optional: Add a semi-transparent background for content
   },
   content2: {
     position: 'absolute',

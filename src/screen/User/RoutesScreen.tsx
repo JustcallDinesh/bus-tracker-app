@@ -73,7 +73,7 @@ const RouteScreen = () => {
         }
       } catch (err: any) {
         console.error("Error fetching bus routes:", err);
-        setError(err.message || "Failed to fetch bus routes");
+        setError(err.message || "Network Error");
         setBusRoutes([]);
       } finally {
         setLoading(false);
