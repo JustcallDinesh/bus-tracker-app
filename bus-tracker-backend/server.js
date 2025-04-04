@@ -38,27 +38,31 @@ const busSchema = new mongoose.Schema({
   busNumber: { type: String, required: true },
   busType: [{ type: String }],
   amenities: [{ type: String }],
-  busRoute: [
+  trips: [
     {
-      from: {
-        cityName: String,
-        departureTime: String,
-        latitude: Number,
-        longitude: Number,
-      },
-      to: {
-        cityName: String,
-        arrivalTime: String,
-        latitude: Number,
-        longitude: Number,
-      },
-    },
-  ],
-  busStops: [
-    {
-      name: { type: String, required: true },
-      latitude: { type: Number }, // Added latitude
-      longitude: { type: Number }, // Added longitude
+      busRoute: [
+        {
+          from: {
+            cityName: String,
+            departureTime: String,
+            latitude: Number,
+            longitude: Number,
+          },
+          to: {
+            cityName: String,
+            arrivalTime: String,
+            latitude: Number,
+            longitude: Number,
+          },
+        },
+      ],
+      busStops: [
+        {
+          name: { type: String, required: true },
+          latitude: { type: Number },
+          longitude: { type: Number },
+        },
+      ],
     },
   ],
   isGovernt: { type: Boolean, default: true },
@@ -70,79 +74,86 @@ const Bus = mongoose.model("Bus", busSchema);
 // Add Bus Endpoint
 app.post("/addBus", async (req, res) => {
   try {
-    const { busName, busNumber, busType, amenities, busRoute, busStops, isGovernt } = req.body;
-    // Validation for busStops
-    if (!busStops || !Array.isArray(busStops)) {
-      return res.status(400).json({ message: "Invalid Bus Stops data" });
+    // console.log(req.body);
+
+    const { busName, busNumber, busType, amenities, trips, isGovernt } = req.body;
+
+    if (!trips || !Array.isArray(trips)) {
+      return res.status(400).json({ message: "Invalid trips data: trips must be an array" });
     }
 
-    // Validate busType
-    if (busType && !Array.isArray(busType)) {
-      return res.status(400).json({ message: "Invalid Bus Type data: Must be an array" });
-    }
+    for (const trip of trips) {
+      const { busRoute, busStops } = trip;
 
-    if (busType) {
-      for (const type of busType) {
-        if (typeof type !== 'string') {
-          return res.status(400).json({ message: "Invalid Bus Type data: Array elements must be strings" });
+      // Validation for busStops
+      if (!busStops || !Array.isArray(busStops)) {
+        return res.status(400).json({ message: "Invalid Bus Stops data" });
+      }
+
+      // Validate busType
+      if (busType && !Array.isArray(busType)) {
+        return res.status(400).json({ message: "Invalid Bus Type data: Must be an array" });
+      }
+
+      if (busType) {
+        for (const type of busType) {
+          if (typeof type !== 'string') {
+            return res.status(400).json({ message: "Invalid Bus Type data: Array elements must be strings" });
+          }
+        }
+      }
+
+      if (amenities && !Array.isArray(amenities)) {
+        return res.status(400).json({ message: "Invalid amenities data: Must be an array" });
+      }
+
+      if (amenities) {
+        for (const type of amenities) {
+          if (typeof type !== 'string') {
+            return res.status(400).json({ message: "Invalid amenities data: Array elements must be strings" });
+          }
+        }
+      }
+
+      for (const segment of busRoute) {
+        if (!segment.from || !segment.from.cityName || !segment.to || !segment.to.cityName) {
+          return res.status(400).json({ message: "Invalid Bus Route data: Missing from/to city name" });
+        }
+        if (!segment.from || !segment.from.departureTime || !segment.to || !segment.to.arrivalTime) {
+          return res.status(400).json({ message: "Invalid Bus Route data: Missing arrivalTime/departureTime city name" });
+        }
+
+        if (segment.from.latitude && (typeof segment.from.latitude !== 'number')) {
+          return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'from' latitude" });
+        }
+        if (segment.from.longitude && (typeof segment.from.longitude !== 'number')) {
+          return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'from' longitude" });
+        }
+        if (segment.to.latitude && (typeof segment.to.latitude !== 'number')) {
+          return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'to' latitude" });
+        }
+        if (segment.to.longitude && (typeof segment.to.longitude !== 'number')) {
+          return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'to' longitude" });
+        }
+      }
+
+      for (const stop of busStops) {
+        if (!stop.name) {
+          return res.status(400).json({ message: "Invalid Bus Stop data : Missing Name" });
+        }
+        if ((stop.latitude && typeof stop.latitude !== 'number' || stop.longitude && typeof stop.longitude !== 'number')) {
+          return res.status(400).json({ message: "Invalid Bus Stop data : Lat or Lon" });
         }
       }
     }
 
-    if (amenities && !Array.isArray(amenities)) {
-      return res.status(400).json({ message: "Invalid amenities data: Must be an array" });
-    }
-
-    if (amenities) {
-      for (const type of amenities) {
-        if (typeof type !== 'string') {
-          return res.status(400).json({ message: "Invalid amenities data: Array elements must be strings" });
-        }
-      }
-    }
-
-
-    for (const segment of busRoute) {
-      if (!segment.from || !segment.from.cityName || !segment.to || !segment.to.cityName) {
-        return res.status(400).json({ message: "Invalid Bus Route data: Missing from/to city name" });
-      }
-      if (!segment.from || !segment.from.departureTime || !segment.to || !segment.to.arrivalTime) {
-        return res.status(400).json({ message: "Invalid Bus Route data: Missing arrivalTime/departureTime city name" });
-      }
-
-      // Validate latitude and longitude only if they exist
-      if (segment.from.latitude && (typeof segment.from.latitude !== 'number')) {
-        return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'from' latitude" });
-      }
-      if (segment.from.longitude && (typeof segment.from.longitude !== 'number')) {
-        return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'from' longitude" });
-      }
-      if (segment.to.latitude && (typeof segment.to.latitude !== 'number')) {
-        return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'to' latitude" });
-      }
-      if (segment.to.longitude && (typeof segment.to.longitude !== 'number')) {
-        return res.status(400).json({ message: "Invalid Bus Route data: Invalid 'to' longitude" });
-      }
-    }
-
-    for (const stop of busStops) {
-      if (!stop.name) { // Updated validation
-        return res.status(400).json({ message: "Invalid Bus Stop data : Missing Name" });
-      }
-      if ((stop.latitude && typeof stop.latitude !== 'number' || stop.longitude && typeof stop.longitude !== 'number')) {
-        return res.status(400).json({ message: "Invalid Bus Stop data : Lat or Lon" });
-      }
-    }
-    // ... (other validation)
     const newBus = new Bus({
       busName,
       busNumber,
       busType,
       amenities,
-      busRoute,
-      busStops,
+      trips,
       isGovernt,
-      // busImageUri,
     });
 
     await newBus.save();
@@ -224,6 +235,7 @@ function authenticateToken(req, res, next) {
 // New Route Finder Endpoint
 app.get("/findRoutes", async (req, res) => {
   try {
+    // console.log("called function");
     const { from, to } = req.query;
 
     let foundRoutes;
@@ -232,14 +244,24 @@ app.get("/findRoutes", async (req, res) => {
       const trimmedFrom = from.trim().toLowerCase();
       const trimmedTo = to.trim().toLowerCase();
 
+      // console.log(from, to);
+
       foundRoutes = await Bus.find({
-        "busRoute.0.from.cityName": { $regex: new RegExp(trimmedFrom, "i") }, // Removed extra space
-        "busRoute.0.to.cityName": { $regex: new RegExp(trimmedTo, "i") }, // Removed extra space
+        trips: {
+          $elemMatch: {
+            busRoute: {
+              $elemMatch: {
+                "from.cityName": { $regex: new RegExp(trimmedFrom, "i") },
+                "to.cityName": { $regex: new RegExp(trimmedTo, "i") },
+              },
+            },
+          },
+        },
       });
+      // console.log("Founded Routes", foundRoutes);
     } else {
       foundRoutes = await Bus.find({});
     }
-
 
     res.json(foundRoutes);
   } catch (err) {

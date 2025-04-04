@@ -1,19 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { StyleSheet, View, Text, ActivityIndicator, Image } from "react-native";
 import MapView, { Marker, Region, Polyline } from "react-native-maps";
 import * as Location from "expo-location";
 import axios from "axios";
+import config from "../../../config";
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation
+
 
 interface MapScreenProps {
   route: {
-    legs: any;
     params: {
       selectedRoute: {
-        busRoute: {
-          from: { latitude: number; longitude: number; cityName: string };
-          to: { latitude: number; longitude: number; cityName: string };
-        }[];
-        busStops: { name: string; latitude: number; longitude: number }[];
+        trips: [
+          {
+            busRoute: {
+              from: { latitude: number; longitude: number; cityName: string };
+              to: { latitude: number; longitude: number; cityName: string };
+            };
+            busStops: { name: string; latitude: number; longitude: number }[];
+          }
+        ];
       };
     };
   };
@@ -23,10 +29,12 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
   const [region, setRegion] = useState<Region | null>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [directions, setDirections] = useState<any[]>([]); // Store direction coordinates
+  const [directions, setDirections] = useState<any[]>([]);
   const [selectedRoute, setSelectedRoute] = useState(route.params?.selectedRoute);
 
-
+  // console.log(" RouteFrom Map Screeen //////////////////", route);
+  // console.log(";;;;;;;;;;;;;;;;;;;", route.params.selectedRoute.trips[0].busRoute);
+  const navigation = useNavigation();
 
   useEffect(() => {
     (async () => {
@@ -50,22 +58,43 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
         });
       } catch (err) {
         console.error("Error getting location:", err);
-        setError("Turn On loction. Please try again.");
+        setError("Turn On location. Please try again.");
       } finally {
         setLoading(false);
       }
     })();
-  }, []);
 
+    return () => {
+      // Cleanup function: Reset state on unmount
+      setSelectedRoute(
+        {
+          trips: [{
+            busRoute: {
+              from: { latitude: 0, longitude: 0, cityName: '' },
+              to: { latitude: 0, longitude: 0, cityName: '' },
+            },
+            busStops: [],
+          }],
+        }
+      );
+      setDirections([]);
+      setError(null);
+      setLoading(false);
+    };
+  }, [navigation]); // Add navigation as dependency
 
-  // Helper function for geocoding
+  useEffect(() => {
+    if (selectedRoute) {
+      fetchDirections();
+    }
+  }, [navigation]);
+
   const handleGeocoding = async (locationName: string) => {
     try {
       const geocodingResponse = await axios.get(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName},India&key=AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI` // Replace YOUR_API_KEY
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName},India&key=${config.KeyToken}` // Replace YOUR_API_KEY
       );
       if (geocodingResponse.data.results && geocodingResponse.data.results.length > 0) {
-        // console.log(`inside The helper Function ${locationName}`, geocodingResponse.data.results[0].geometry.location);
         return geocodingResponse.data.results[0].geometry.location;
       } else {
         console.error(`Geocoding failed for ${locationName}`);
@@ -77,13 +106,12 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
     }
   };
 
-
-  useEffect(() => {
-    const fetchDirections = async () => {
-      if (route.params?.selectedRoute?.busRoute && route.params?.selectedRoute?.busRoute.length > 0) {
-
-        let from = { ...route.params.selectedRoute.busRoute[0].from };
-        let to = { ...route.params.selectedRoute.busRoute[0].to };
+  const fetchDirections = async () => {
+    if (selectedRoute && selectedRoute.trips && selectedRoute.trips.length > 0) {
+      const trip = selectedRoute.trips[0];
+      if (trip.busRoute && trip.busStops) {
+        let from = { ...trip.busRoute.from };
+        let to = { ...trip.busRoute.to };
 
         // Geocode 'from' location if coordinates are missing
         if (!from.latitude || !from.longitude) {
@@ -91,10 +119,8 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
           if (fromCoordinates) {
             from.latitude = fromCoordinates.lat;
             from.longitude = fromCoordinates.lng;
-            // console.log("From (after geocoding):", from); // Log updated from
-
           } else {
-            console.log(`Could not geocode 'from' location: ${from.cityName}`); // Exit if geocoding fails for 'from'
+            console.log(`Could not geocode 'from' location: ${from.cityName}`);
           }
         }
 
@@ -104,19 +130,14 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
           if (toCoordinates) {
             to.latitude = toCoordinates.lat;
             to.longitude = toCoordinates.lng;
-            // console.log("To (after geocoding):", to); // Log updated to
           } else {
             console.error(`Could not geocode 'to' location: ${to.cityName}`);
             return;
           }
         }
 
-        const updatedBusRoute = [{
-          from: from,
-          to: to,
-        }];
-
-        const updatedBusStopsPromises = route.params.selectedRoute.busStops.map(async (stop) => {
+        // Geocode busStops if coordinates are missing
+        const updatedBusStopsPromises = trip.busStops.map(async (stop) => {
           if (stop.latitude && stop.longitude) {
             return { ...stop };
           } else {
@@ -130,48 +151,44 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
           }
         });
 
-
         const updatedBusStops = await Promise.all(updatedBusStopsPromises);
-        const validBusStops = updatedBusStops.filter(stop => stop && stop.latitude !== null && stop.longitude !== null);
+        const validBusStops = updatedBusStops.filter((stop) => stop && stop.latitude !== null && stop.longitude !== null);
 
-
+        // Update selectedRoute with geocoded coordinates
         const updatedSelectedRoute = {
-          ...route.params.selectedRoute,
-          busRoute: updatedBusRoute,
-          busStops: validBusStops,
+          ...selectedRoute,
+          trips: [{
+            ...trip,
+            busRoute: { from: from, to: to }, // Correctly update busRoute as an object
+            busStops: validBusStops,
+          }],
         };
         setSelectedRoute(updatedSelectedRoute);
+
         const waypointsString = validBusStops.map((stop) => `${stop.latitude},${stop.longitude}`).join("|");
 
         try {
           const response = await axios.get(
-            `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&waypoints=${waypointsString}&key=AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI`
+            `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&waypoints=${waypointsString}&key=${config.KeyToken}`
           );
-          // console.log(response);
-
-
 
           if (response.data.routes && response.data.routes.length > 0) {
             const points = response.data.routes[0].overview_polyline.points;
             const decodedPoints = decodePolyline(points);
             setDirections(decodedPoints);
-
-
-
+          } else {
+            console.log("-------------------------------------------------------------");
           }
-
         } catch (err) {
           console.error("Error fetching directions:", err);
           setError("Error fetching directions.");
         }
       }
-    };
+    }
+  };
 
-    fetchDirections();
-  }, [route.params?.selectedRoute]);
 
   if (!selectedRoute) {
-    // Show user location if no route data
     return (
       <View style={styles.container}>
         {loading ? (
@@ -190,6 +207,23 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
     );
   }
 
+  const busRoute = selectedRoute.trips[0].busRoute;
+  const busStops = selectedRoute.trips[0].busStops;
+
+  // Extract coordinates from busRoute object
+  const fromCoordinate = {
+    latitude: busRoute.from.latitude,
+    longitude: busRoute.from.longitude,
+  };
+
+  const toCoordinate = {
+    latitude: busRoute.to.latitude,
+    longitude: busRoute.to.longitude,
+  };
+
+  // Create coordinates array for Polyline
+  const polylineCoordinates = [fromCoordinate, toCoordinate];
+
   return (
     <View style={styles.container}>
       {loading ? (
@@ -203,50 +237,38 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
         <MapView style={styles.map} initialRegion={region}>
           <Marker coordinate={region} title="Your Location" image={require('../Components/asset/mylocation.png')} />
 
-          {selectedRoute.busStops.map((stop, index) => {
-            if (stop && stop.latitude !== null && stop.longitude !== null) {
-              return (
-                <Marker
-                  key={index}
-                  coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
-                  title={stop.name}
-                  image={require('../Components/asset/pin.png')}
-                />
-              );
-            }
-            return null;
-          })}
-          {route.params?.selectedRoute.busRoute &&
-            selectedRoute.busRoute.map((routeItem, index) => (
-              <View key={`route-item-${index}`}>
-                <Marker
-                  key={`from-${index}`}
-                  coordinate={{
-                    latitude: routeItem.from.latitude,
-                    longitude: routeItem.from.longitude,
-                  }}
-                  title={`From: ${routeItem.from.cityName}`}
-                  image={require('../Components/asset/locationf.png')}
-                />
-                <Marker
-                  key={`to-${index}`}
-                  coordinate={{
-                    latitude: routeItem.to.latitude,
-                    longitude: routeItem.to.longitude,
-                  }}
-                  title={`To: ${routeItem.to.cityName}`}
-                  image={require('../Components/asset/locationt.png')}
-                />
-              </View>
+          {busStops
+            .filter(stop => stop && stop.latitude !== null && stop.longitude !== null)
+            .map((stop, index) => (
+              <Marker
+                key={index}
+                coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
+                title={stop.name}
+                image={require('../Components/asset/pin.png')}
+              />
             ))}
-          {directions.length > 0 && (
-            <Polyline coordinates={directions} strokeWidth={6} strokeColor="#4B70F5" />
-          )}
+
+          {/* Markers for From and To locations */}
+          <Marker
+            coordinate={fromCoordinate}
+            title={`From: ${busRoute.from.cityName}`}
+            image={require('../Components/asset/locationf.png')}
+          />
+          <Marker
+            coordinate={toCoordinate}
+            title={`To: ${busRoute.to.cityName}`}
+            image={require('../Components/asset/locationt.png')}
+          />
+
+          {directions && directions.length > 0 && <Polyline coordinates={directions} strokeWidth={6} strokeColor="#4B70F5" />}
         </MapView>
-      ) : null}
+      ) : (
+        <View><Text style={styles.errorText}>Something Went Wronge..Please try again..</Text></View>
+      )}
     </View>
   );
 };
+
 
 const decodePolyline = (encoded: string): any[] => {
   const points: any[] = [];
@@ -302,4 +324,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapScreen;
+export default memo(MapScreen);

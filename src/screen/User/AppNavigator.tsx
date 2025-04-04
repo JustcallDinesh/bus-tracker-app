@@ -74,8 +74,8 @@ const AppNavigator = () => {
             <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="MainApp" component={UserTabs} />
-            <Stack.Screen name='Map' component={MapScreen} />
             <Stack.Screen name="SearchResults" component={SearchResultsScreen} />
+            <Stack.Screen name="Map" component={MapScreen} />
 
           </>
         ) : (

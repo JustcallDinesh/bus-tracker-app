@@ -1,99 +1,82 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, FlatList, Easing, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Easing } from 'react-native';
 import CustomHeader from "../Components/CustomHeader";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons';
 import VerticalLine from './VerticalLine';
-import SearchFields from './SearchFeilds'; // Import your SearchFields component
+import SearchFields from './SearchFeilds';
 
 const SearchResultsScreen = ({ navigation, route }) => {
   const { searchResults, from, to, date } = route.params;
   const [selectedRoute, setSelectedRoute] = useState(null);
-  const [showSearchFields, setShowSearchFields] = useState(false); // Add this state
+  const [showSearchFields, setShowSearchFields] = useState(false);
+  const detailViewHeight = Dimensions.get('screen').height * 0.88;
+  const detailViewAnim = useRef(new Animated.Value(Dimensions.get('screen').height)).current;
+  const searchFieldsAnim = useRef(new Animated.Value(0)).current;
+
 
   // console.log(searchResults);
 
-  //animation Part
-  const detailViewHeight = Dimensions.get('screen').height * 0.88;
-  const detailViewAnim = useRef(new Animated.Value(Dimensions.get('screen').height)).current;
-  const searchFieldsAnim = useRef(new Animated.Value(0)).current; // Add this for animation
 
-  //overlay
   const Overlay = ({ onPress }) => (
     <TouchableOpacity style={styles.overlay} onPress={onPress}>
       <View style={styles.overlayBackground} />
     </TouchableOpacity>
   );
 
-
-
   const clearSelectedRoute = () => {
     setSelectedRoute(null);
   };
 
   function formatTimeFromISO(isoString) {
-    const date = new Date(isoString); // Directly create Date object
-
-    if (isNaN(date.getTime())) { // Check for invalid date
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) {
       console.error("Invalid ISO date string:", isoString);
       return "Invalid Time";
     }
-
-    let formattedTime = new Intl.DateTimeFormat('en-IN', { // Chennai, Tamil Nadu locale
+    let formattedTime = new Intl.DateTimeFormat('en-IN', {
       hour: 'numeric',
       minute: 'numeric',
       hour12: true,
     }).format(date);
-
     formattedTime = formattedTime.replace("am", "AM").replace("pm", "PM");
     return formattedTime;
   }
 
   useEffect(() => {
     navigation.setOptions({
-      header: () => {
-        return (
-          <CustomHeader
-            navigation={navigation}
-            from={from}
-            to={to}
-            date={date}
-            setShowSearchInput={setShowSearchFields} // Pass the state updater function
-          />
-        );
-      },
+      header: () => (
+        <CustomHeader
+          navigation={navigation}
+          from={from}
+          to={to}
+          date={date}
+          setShowSearchInput={setShowSearchFields}
+        />
+      ),
     });
   }, [navigation, from, to, date]);
 
   useEffect(() => {
-    if (selectedRoute) {
-      Animated.timing(detailViewAnim, {
-        toValue: Dimensions.get('window').height - detailViewHeight,
-        duration: 500,
-        easing: Easing.in(Easing.linear),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(detailViewAnim, {
-        toValue: Dimensions.get('window').height,
-        duration: 300,
-        easing: Easing.in(Easing.linear),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [selectedRoute]);
+    Animated.timing(detailViewAnim, {
+      toValue: selectedRoute ? Dimensions.get('window').height - detailViewHeight : Dimensions.get('window').height,
+      duration: selectedRoute ? 500 : 300,
+      easing: Easing.in(Easing.linear),
+      useNativeDriver: true,
+    }).start();
+  }, [selectedRoute, detailViewHeight]);
 
-  // Toggle animation
   useEffect(() => {
     Animated.timing(searchFieldsAnim, {
-      toValue: showSearchFields ? 1 : 0, // 1 for open, 0 for closed
+      toValue: showSearchFields ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
   }, [showSearchFields]);
 
-  const RouteDetailedView = ({ route }) => {
-    // console.log(route);
+
+
+  const RouteDetailedView = ({ route }) => { // Receive from and to as props
 
     const amenityIcons = {
       'ChargingPort': 'cellphone-charging',
@@ -105,33 +88,40 @@ const SearchResultsScreen = ({ navigation, route }) => {
       'Blankets': 'alert-circle'
     };
 
-    const renderBusType = () => {
-
-      if (!route.busType) {
-        return null;
+    const formatTimeFromISO = (isoString: string) => {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) {
+        console.error("Invalid ISO date string:", isoString);
+        return "Invalid Time";
       }
+      let formattedTime = new Intl.DateTimeFormat('en-IN', {
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true,
+      }).format(date);
+      formattedTime = formattedTime.replace("am", "AM").replace("pm", "PM");
+      return formattedTime;
+    };
+
+    const renderBusType = () => {
+      if (!route || !route.busType || route.busType.length === 0) return null;
       const BusTypeList = route.busType.map((item: string) => item.trim());
       return (
         <View style={styles.AmeniContainer1}>
           <Text style={styles.AmeniTitle}>Bus Types </Text>
           <View style={styles.BustypeContainer}>
-            {BusTypeList.map((busTypes, index) => {
-              return (
-                <View key={index} style={styles.BusItem}>
-                  <Text style={styles.BusText}>{busTypes}</Text>
-                </View>
-              );
-            })}
+            {BusTypeList.map((busTypes, index) => (
+              <View key={index} style={styles.BusItem}>
+                <Text style={styles.BusText}>{busTypes}</Text>
+              </View>
+            ))}
           </View>
         </View>
       );
-    }
-    // Function to render amenities with icons
+    };
+
     const renderAmenities = () => {
-      // console.log(route.amenities)
-      if (!route.amenities || route.amenities.length === 0) {
-        return null;
-      }
+      if (!route || !route.amenities || route.amenities.length === 0) return null;
       const amenitiesList = route.amenities.map((item: string) => item.trim());
       return (
         <View style={styles.AmeniContainer2}>
@@ -151,22 +141,39 @@ const SearchResultsScreen = ({ navigation, route }) => {
       );
     };
 
+    let matchingRouteSegment = null;
+    let matchingTrip = null;
+
+    // console.log(from, to, "-----------");
+
+    for (const trip of route?.trips) {
+      for (const routeSegment of trip?.busRoute) {
+        const fromCity = routeSegment.from?.cityName?.trim().toLowerCase();
+        const toCity = routeSegment.to?.cityName?.trim().toLowerCase();
+        const searchedFrom = from?.trim().toLowerCase();
+        const searchedTo = to?.trim().toLowerCase();
+
+        if (fromCity === searchedFrom && toCity === searchedTo) {
+          matchingRouteSegment = routeSegment;
+          matchingTrip = trip;
+          // console.log("matchingRouteSegment correct", matchingRouteSegment);
+          break;
+        }
+      }
+      if (matchingRouteSegment) {
+        break;
+      }
+    }
 
     return (
-      <Animated.ScrollView showsVerticalScrollIndicator={false}
-        style={{ flexGrow: 1 }} // Add flexGrow: 1 here
-        contentContainerStyle={{ paddingBottom: 80 }}>
-
+      <Animated.ScrollView showsVerticalScrollIndicator={false} style={{ flexGrow: 1 }} contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={styles.detailedViewContent}>
           <View style={styles.routeDetails}>
             <View style={styles.routeHeader}>
               <View>
-                <Text style={styles.routeTitle}>{selectedRoute.busName}</Text>
-                <Text style={styles.routeType}>
-                  {selectedRoute.busNumber}{" | "}{selectedRoute.busType.join(", ")}
-                </Text>
+                <Text style={styles.routeTitle}>{route && route.busName}</Text>
+                <Text style={styles.routeType}>{route && route.busNumber}{" | "}{route && route.busType && route.busType.join(", ")}</Text>
               </View>
-
               <View style={styles.ratingContainer}>
                 <View style={styles.rating}>
                   <Icon name="star" size={12} color="white" style={styles.starIcon} />
@@ -177,139 +184,102 @@ const SearchResultsScreen = ({ navigation, route }) => {
                   <Text style={styles.ratingCountText}>10 </Text>
                 </View>
               </View>
+            </View>
+            {renderBusType()}
+            {renderAmenities()}
 
-            </View>
-            <View>
-              {renderBusType()}
-            </View>
-            <View>
-              {selectedRoute.amenities && selectedRoute.amenities.length > 0 ? (renderAmenities()) : null}
-            </View>
-
-            {selectedRoute.busRoute && selectedRoute.busRoute.length > 0 && (
+            {matchingRouteSegment && (
               <View style={styles.progress}>
                 <View style={styles.progressItems}>
-                  {/* BUS ORIGIN */}
-                  <View style={styles.progressItem}>
-                    <View style={styles.totalorgin}>
-                      <Text style={styles.location}>BUS ORIGIN</Text>
-                      <Text style={[styles.locationName,]}>
-                        {selectedRoute.busRoute[0].from.cityName}
-                      </Text>
-                      <Text style={styles.time}>{formatTimeFromISO(selectedRoute.busRoute[0].from.departureTime)}</Text>
-                    </View>
+                  <View style={styles.totalorgin}>
+                    <Text style={styles.location}>BUS ORIGIN</Text>
+                    <Text style={[styles.locationName,]}>{matchingRouteSegment.from?.cityName?.trim()}</Text>
+                    <Text style={styles.time}>{matchingRouteSegment.from && formatTimeFromISO(matchingRouteSegment.from.departureTime)}</Text>
                   </View>
                   <View style={styles.swap}>
                     <Icons name="swap-horizontal-circle" size={25} color="#fff" style={styles.iconsAme} />
                   </View>
-                  {/* BUS END */}
                   <View style={[styles.progressItem, styles.boarding]}>
                     <View style={styles.totalorgin}>
                       <Text style={[styles.location, styles.boardingLocation]}>DESTINATION</Text>
-                      <Text style={[styles.locationName, styles.boardingLocationName]}>
-                        {selectedRoute.busRoute[0].to.cityName}
-                      </Text>
-                      <Text style={styles.time}>{formatTimeFromISO(selectedRoute.busRoute[0].to.arrivalTime)}</Text>
+                      <Text style={[styles.locationName, styles.boardingLocationName]}>{matchingRouteSegment.to?.cityName?.trim()}</Text>
+                      <Text style={styles.time}>{matchingRouteSegment.to && formatTimeFromISO(matchingRouteSegment.to.arrivalTime)}</Text>
                     </View>
                   </View>
                 </View>
               </View>
             )}
 
-
-            {/* +3 Stops Section */}
-            <View style={styles.trContainer}>
-              <View>
-                <Icon name="location" size={25} color="red" style={styles.iconsAme} />
-              </View>
-              <View style={styles.dottedLine} />
-              <Text style={styles.stopsText}>+ {selectedRoute.busStops.length} Bus stops</Text>
-              <View style={styles.dottedLine} />
-              <View style={styles.busIconContainer}>
-                <Image source={require('../Components/asset/bus.png')} style={styles.busIcon} />
-              </View>
-            </View>
-
-
-            <View style={styles.stopContainer}>
-              <View style={styles.stopItemContainer}>
-                <Icon name="navigate-sharp" size={18} color="#000000" style={styles.iconfrto} />
-                <View ><Text style={styles.locationindivator}>{selectedRoute.busRoute[0].from.cityName}</Text></View>
-              </View>
-              {/* Use map instead of FlatList */}
-              {selectedRoute.busStops.map((stop, index) => (
-                <View style={styles.stopItemContainer} key={index}>
-                  <Icon name="radio-button-on-outline" size={21} color="#007bff" />
-                  {index > 0 && <VerticalLine style={styles.verticalLine} />}
-                  <Text style={styles.stopName}>{stop.name}</Text>
+            {matchingTrip && matchingRouteSegment && (
+              <View style={styles.stopContainer}>
+                <View style={styles.stopItemContainer}>
+                  <Icon name="navigate-sharp" size={18} color="#000000" style={styles.iconfrto} />
+                  <View><Text style={styles.locationindivator}>{matchingRouteSegment.from?.cityName?.trim()}</Text></View>
                 </View>
-              ))}
-
-              <View style={styles.stopItemContainer}>
-                <Icon name="location-sharp" size={18} color="#000000" style={styles.iconfrto} />
-                <View><Text style={styles.locationindivator}>{selectedRoute.busRoute[0].to.cityName}</Text></View>
+                {matchingTrip.busStops.map((stop, index) => {
+                  // You might need to filter bus stops based on the route segment if you have more complex scenarios
+                  return (
+                    <View style={styles.stopItemContainer} key={index}>
+                      <Icon name="radio-button-on-outline" size={21} color="#007bff" />
+                      {index > 0 && <VerticalLine style={styles.verticalLine} />}
+                      <Text style={styles.stopName}>{stop.name}</Text>
+                    </View>
+                  );
+                })}
+                <View style={styles.stopItemContainer}>
+                  <Icon name="location-sharp" size={18} color="#000000" style={styles.iconfrto} />
+                  <View><Text style={styles.locationindivator}>{matchingRouteSegment.to?.cityName?.trim()}</Text></View>
+                </View>
               </View>
-            </View>
-            {selectedRoute && (
-              <TouchableOpacity
-                style={styles.mapButton}
-                onPress={() => {
-                  navigation.navigate('Map', {
-                    selectedRoute: {
-                      ...selectedRoute,
-                      busStops: selectedRoute.busStops.map((stop) => ({
-                        name: stop.name,
-                        latitude: stop.latitude,
-                        longitude: stop.longitude,
-                      })),
-                    },
-                  });
-                }}
-              >
+            )}
+            {route && (
+              <TouchableOpacity style={styles.mapButton} onPress={() => {
+                navigation.navigate('Map', {
+                  selectedRoute: {
+                    trips: [
+                      {
+                        busRoute: matchingRouteSegment, // You might need to adjust this for the correct route on the map
+                        busStops: matchingTrip.busStops.map((stop) => ({
+                          name: stop.name,
+                          latitude: stop.latitude,
+                          longitude: stop.longitude,
+                        })),
+                      },
+                    ],
+                  },
+                });
+              }}>
                 <Text style={styles.mapButtonText}>View Route on Map</Text>
               </TouchableOpacity>
             )}
-
-
           </View>
         </View>
       </Animated.ScrollView>
     );
   };
-  // <View>
-  //   {selectedRoute.busImageUri && (
-  //     <View>
-  //       <Image source={{ uri: selectedRoute.busImageUri }} style={styles.BusImage} />
-  //     </View>
-  //   )}
-  // </View>
 
-  if (!searchResults) {
+
+  if (!searchResults || searchResults.length === 0) {
     return (
       <View style={styles.container}>
-        <Text>No search results found.</Text>
+        <Text style={styles.noRouteText}>No route found.</Text>
       </View>
     );
   }
+
   return (
     <View style={styles.container}>
-      <View><CustomHeader
-        navigation={navigation}
-        from={from}
-        to={to}
-        date={date}
-        setShowSearchInput={setShowSearchFields} // Pass the state updater function
-      />
+      <View>
+        <CustomHeader
+          navigation={navigation}
+          from={from}
+          to={to}
+          date={date}
+          setShowSearchInput={setShowSearchFields}
+        />
         <View>
-          {showSearchFields && ( // Conditionally render SearchFields
-            <Animated.View
-              style={[
-                styles.searchFeildsContainer,
-                {
-                  transform: [{ translateY: searchFieldsAnim }],
-                },
-              ]}
-            >
+          {showSearchFields && (
+            <Animated.View style={[styles.searchFeildsContainer, { transform: [{ translateY: searchFieldsAnim }] }]}>
               <SearchFields onSearch={() => setShowSearchFields(false)} />
             </Animated.View>
           )}
@@ -317,85 +287,99 @@ const SearchResultsScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {searchResults.map((item) => (
-          <View
-            key={item._id}
-            style={styles.routeItem}
+        {searchResults && searchResults.length > 0 ? (
+          searchResults.map((item) => {
+            let displayedFrom = '';
+            let displayedTo = '';
+            let foundMatch = false;
 
-          >
-            <View style={styles.BusContainer}>
-              <View>
-                <Text style={styles.BusName}>{item.busName}</Text>
-                <Text style={styles.BusNumber}>
-                  {item.busNumber}{" | "} {item.busType.join(", ")}
-                </Text>
-              </View>
-              <Text style={[styles.Busdiv, item.isGovernt ? styles.Busdiv2 : styles.Busdiv]}>
-                {item.isGovernt ? 'Goverment ' : 'Private '}
-              </Text>
-            </View>
-            {item.busRoute && item.busRoute.length > 0 && (
-              <View style={styles.TimeInfo}>
-                <Text style={styles.FromTo}>{item.busRoute[0].from.cityName}</Text>
-                <View style={styles.ConnectingLine} />
-                <View style={styles.distanceContainer}>
-                  <Text style={styles.distance}><Icon name="arrow-forward-outline" size={20} color="#666" style={styles.icons} /></Text>
+            for (const trip of item.trips) {
+              for (const routeSegment of trip.busRoute) {
+                const fromCity = routeSegment.from.cityName.trim().toLowerCase();
+                const toCity = routeSegment.to.cityName.trim().toLowerCase();
+                const searchedFrom = from.trim().toLowerCase();
+                const searchedTo = to.trim().toLowerCase();
+
+                if (fromCity === searchedFrom && toCity === searchedTo) {
+                  displayedFrom = routeSegment.from.cityName;
+                  displayedTo = routeSegment.to.cityName;
+                  foundMatch = true;
+                  break;
+                } else if (toCity === searchedFrom && fromCity === searchedTo) {
+                  displayedFrom = routeSegment.to.cityName;
+                  displayedTo = routeSegment.from.cityName;
+                  foundMatch = true;
+                  break;
+                }
+              }
+              if (foundMatch) {
+                break;
+              }
+            }
+
+            if (!foundMatch) {
+              return null; // Skip rendering if no matching route segment is found
+            }
+
+            return (
+              <TouchableOpacity key={item._id?.$oid || String(Math.random())} style={styles.routeItem} onPress={() => setSelectedRoute(item)}>
+                <View style={styles.BusContainer} >
+                  <View>
+                    <Text style={styles.BusName}>{item.busName}</Text>
+                    <Text style={styles.BusNumber}>{item.busNumber}{" | "}{item.busType.join(", ")}</Text>
+                  </View>
+                  <Text style={[styles.Busdiv, item.isGovernt ? styles.Busdiv2 : styles.Busdiv]}>{item.isGovernt ? 'Goverment ' : 'Private '}</Text>
                 </View>
-                <View style={styles.ConnectingLine} />
-                <Text style={styles.FromTo}>{item.busRoute[0].to.cityName}</Text>
-                {/* <Text style={styles.hours}>08h.30m</Text> */}
-              </View>
-            )}
-
-            <View style={styles.infoContainer}>
-              <View style={styles.infoItem}>
-                <Icons name="seat-recline-extra" size={16} color="red" style={styles.icon} />
-
-                <Text style={styles.infoText}>Seats </Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Icons name="navigation-variant" size={16} color="green" style={styles.icon} />
-                <Text style={styles.infoText}>Trackable </Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Icon name="radio-outline" size={16} color="blue" style={styles.icon} />
-                <Text style={styles.infoText}>1 Amenity </Text>
-              </View>
-            </View>
-
-            <View style={styles.bottomLieInFlat}>
-              <View style={styles.bottomlie}>
-                <Icon
-                  name='chevron-down'
-                  size={20}
-                  color="#000"
-                />
-                <Text style={styles.BusDetails} onPress={() => { setSelectedRoute(item); }}>View Bus Details </Text>
-              </View>
-            </View>
-
+                <View style={styles.TimeInfo}>
+                  <Text style={styles.FromTo}>{displayedFrom.trim()}</Text>
+                  <View style={styles.ConnectingLine} />
+                  <View style={styles.distanceContainer}>
+                    <Text style={styles.distance}><Icon name="arrow-forward-outline" size={20} color="#666" style={styles.icons} /></Text>
+                  </View>
+                  <View style={styles.ConnectingLine} />
+                  <Text style={styles.FromTo}>{displayedTo.trim()}</Text>
+                </View>
+                <View style={styles.infoContainer}>
+                  <View style={styles.infoItem}>
+                    <Icons name="seat-recline-extra" size={16} color="red" style={styles.icon} />
+                    <Text style={styles.infoText}>Seats </Text>
+                  </View>
+                  <View style={styles.infoItem}>
+                    <Icons name="navigation-variant" size={16} color="green" style={styles.icon} />
+                    <Text style={styles.infoText}>Trackable </Text>
+                  </View>
+                  <View style={styles.infoItem}>
+                    <Icon name="radio-outline" size={16} color="blue" style={styles.icon} />
+                    <Text style={styles.infoText}>{item.amenities.length === 0 ? "" : item.amenities.length} Amenity </Text>
+                  </View>
+                </View>
+                <View style={styles.bottomLieInFlat}>
+                  <View style={styles.bottomlie}>
+                    <Icon name='chevron-down' size={20} color="#000" />
+                    <Text style={styles.BusDetails}>View Bus Details </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })
+        ) : (
+          <View style={styles.noRoutecontainer}>
+            <Text style={styles.noRouteText}>No route found.</Text>
           </View>
-        ))}
+        )}
       </ScrollView>
       {selectedRoute && (
         <>
           <Overlay onPress={clearSelectedRoute} />
-          <Animated.View
-            style={[
-              styles.detailView,
-              {
-                transform: [{ translateY: detailViewAnim }],
-                height: detailViewHeight,
-              },
-            ]}
-          >
-            <RouteDetailedView route={selectedRoute} />
+          <Animated.View style={[styles.detailView, { transform: [{ translateY: detailViewAnim }], height: detailViewHeight }]}>
+            <RouteDetailedView route={selectedRoute} navigation={navigation} />
           </Animated.View>
         </>
       )}
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -734,6 +718,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     elevation: 3,
+
   },
   stopName: {
     marginLeft: 20,
@@ -776,7 +761,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'orange',
     elevation: 8,
-
+    marginBottom: 10
   },
   progressItems: {
     // backgroundColor:'green',
@@ -849,7 +834,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
     alignSelf: 'center',
   },
-
+  noRoutecontainer: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  noRouteText: {
+    // flex: 1,
+    fontSize: 18,
+    color: 'red',
+  },
   ////--------------------------------------
   //bus moving style
   trContainer: {
@@ -888,9 +881,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },//--------------------------------------------
   AmeniContainer2: {
-
-    marginBottom: 10
-
+    marginBottom: 8,
   },
 
   AmeniTitle: {

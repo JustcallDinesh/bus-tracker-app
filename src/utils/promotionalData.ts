@@ -15,5 +15,12 @@ export const promotionData = [
     buttonText: "Claim Offer",
     onPress: () => console.log("20% Off Promotion Pressed"),
   },
+  {
+    title: "Special Offer: 70% Off",
+    description: "Get 20% off on your next bus ticket booking.",
+    imageUrl: "https://via.placeholder.com/100", // Replace with your image URL
+    buttonText: "Claim Offer",
+    onPress: () => console.log("20% Off Promotion Pressed"),
+  },
   // Add more promotion items as needed
 ];

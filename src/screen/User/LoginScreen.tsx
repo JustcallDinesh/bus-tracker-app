@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
@@ -16,38 +18,45 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [Error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   // const navigation = useNavigation();
 
-  const handleLogin = () => {
-    // Implement login logic
-    axios
-      .post(`${config.apibaseUrl}/Login`, { email, password })
-      .then((response) => {
-        console.log("Login Successfully...");
-        const token = response.data.token;
-        // console.log("Token Received ", token);
-        AsyncStorage.setItem("token", token);
-        // console.log("Token Saved to Asyncstorage");
-        navigation.navigate("Home");
-      })
-      .catch((error) => {
-        console.log('Login error :', error);
-        if (!email || !password) {
-          setEmail("Please enter data")
-        } else {
-          if (error.response && error.response.status === 401) {
-            setError("You are enter Wrong Password/Email or Please Register");
-            setTimeout(() => {
-              setError("");
-            }, 3000);
-          } else {
-            setError("Try Again Later..");
-            setTimeout(() => {
-              setError("");
-            }, 3000);
-          }
-        }
+  const handleLogin = async () => {
+    if (!email) {
+      setError("Please enter the email..");
+      return;
+    }
+    if (!password) {
+      setError("Please enter the password..");
+      return;
+    }
+
+    setLoading(true); // Start loading
+    try {
+      const response = await axios.post(`${config.apibaseUrl}/login`, {
+        email,
+        password,
       });
+
+
+      if (response.status === 200) {
+        console.log("Success", "Login successful");
+        navigation.navigate("Home");
+      } else {
+        Alert.alert("Error", "Login failed");
+      }
+    } catch (error) {
+      setError(
+        error.response?.data?.message || "Login failed"
+      );
+      setInterval(() => {
+        setError("")
+
+      }, 5000);
+    } finally {
+      ~~
+      setLoading(false); // Stop loading
+    }
   };
 
   return (
@@ -55,6 +64,12 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       <View style={styles.content}>
         <Text style={styles.title}>Bus Tracker</Text>
         <Text style={styles.subtitle}>Welcome back ! </Text>
+
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size={"small"} color="teal" />
+          </View>
+        ) : null}
         {Error ? <Text style={styles.errors}>{Error}</Text> : null}
 
         <View style={styles.form}>
@@ -103,6 +118,14 @@ const styles = StyleSheet.create({
     color: "red",
     marginBottom: 10,
     textAlign: "center",
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
   },
   title: {
     fontSize: 32,
