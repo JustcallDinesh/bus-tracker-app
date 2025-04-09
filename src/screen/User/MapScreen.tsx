@@ -6,7 +6,6 @@ import axios from "axios";
 import config from "../../../config";
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 
-
 interface MapScreenProps {
   route: {
     params: {

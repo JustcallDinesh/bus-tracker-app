@@ -168,6 +168,7 @@ app.post("/addBus", async (req, res) => {
 app.post("/register", async (req, res) => {
   try {
     const { username, email, phone, password } = req.body;
+
     const user = new User({ username, email, phone, password });
     await user.save();
     res.status(201).json({ message: "User registered successfully" });
@@ -176,7 +177,6 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-// AIzaSyC2w9WiuqlFqCpEsfGsQ79Ybap1TE4szJI
 // Login endpoint
 app.post("/login", async (req, res) => {
   try {

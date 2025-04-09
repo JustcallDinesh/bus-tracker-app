@@ -292,6 +292,8 @@ const SearchResultsScreen = ({ navigation, route }) => {
             let displayedFrom = '';
             let displayedTo = '';
             let foundMatch = false;
+            let departureTime = '';
+            let arrivalTime = '';
 
             for (const trip of item.trips) {
               for (const routeSegment of trip.busRoute) {
@@ -303,11 +305,8 @@ const SearchResultsScreen = ({ navigation, route }) => {
                 if (fromCity === searchedFrom && toCity === searchedTo) {
                   displayedFrom = routeSegment.from.cityName;
                   displayedTo = routeSegment.to.cityName;
-                  foundMatch = true;
-                  break;
-                } else if (toCity === searchedFrom && fromCity === searchedTo) {
-                  displayedFrom = routeSegment.to.cityName;
-                  displayedTo = routeSegment.from.cityName;
+                  departureTime = formatTimeFromISO(routeSegment.from.departureTime);
+                  arrivalTime = formatTimeFromISO(routeSegment.to.arrivalTime);
                   foundMatch = true;
                   break;
                 }
@@ -351,6 +350,9 @@ const SearchResultsScreen = ({ navigation, route }) => {
                   <View style={styles.infoItem}>
                     <Icon name="radio-outline" size={16} color="blue" style={styles.icon} />
                     <Text style={styles.infoText}>{item.amenities.length === 0 ? "" : item.amenities.length} Amenity </Text>
+                  </View>
+                  <View style={styles.infoItemtimeContainer}>
+                    <Text style={styles.infoTextTime}>{departureTime} - {arrivalTime} </Text>
                   </View>
                 </View>
                 <View style={styles.bottomLieInFlat}>
@@ -646,6 +648,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  infoItemtimeContainer: {
+    backgroundColor: 'teal',
+    padding: 4,
+    borderRadius: 3
+  },
   icon: {
     // backgroundColor:'#ccc',
     marginRight: 4,
@@ -665,6 +672,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 11,
     color: "#666",
+  },
+  infoTextTime: {
+    fontSize: 12,
+    color: '#fff',
+    fontStyle: 'italic',
+    fontWeight: 'bold',
   },
   ratingContainer: {
     position: 'absolute',

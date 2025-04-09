@@ -128,7 +128,7 @@ const RouteScreen = () => {
       })
       .catch((error) => {
         console.error("Error finding routes:", error);
-        setError("Failed to find routes. Please try again.");
+        setError("Network Error. Please try again.");
         setLoading(false);
       });
 

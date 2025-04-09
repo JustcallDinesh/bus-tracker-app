@@ -38,23 +38,30 @@ const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         password,
       });
 
-
       if (response.status === 200) {
         console.log("Success", "Login successful");
-        navigation.navigate("Home");
+        const { token } = response.data; // Assuming your backend returns a 'token' in the response data
+
+        // Save the token to AsyncStorage
+        try {
+          await AsyncStorage.setItem('token', token);
+          // console.log("Token saved successfully:", token);
+          navigation.navigate("Home");
+        } catch (error) {
+          // console.error("Error saving token:", error);
+          Alert.alert("Error", "Failed to save login information.");
+        }
       } else {
         Alert.alert("Error", "Login failed");
       }
-    } catch (error) {
+    } catch (error: any) {
       setError(
         error.response?.data?.message || "Login failed"
       );
       setInterval(() => {
-        setError("")
-
+        setError("");
       }, 5000);
     } finally {
-      ~~
       setLoading(false); // Stop loading
     }
   };
