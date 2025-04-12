@@ -15,7 +15,7 @@ function NotificationsPage() {
       setError("");
       try {
         const response = await axios.get(
-          "http://localhost:5000/api/notifications"
+          "http://localhost:5001/api/notifications"
         );
         setNotifications(response.data);
         setLoading(false);

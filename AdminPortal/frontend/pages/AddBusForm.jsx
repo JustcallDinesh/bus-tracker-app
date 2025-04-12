@@ -19,7 +19,7 @@ function AddBusForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes");
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -74,7 +74,7 @@ function AddBusForm() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/buses",
+        "http://localhost:5001/api/buses",
         newBus
       );
       console.log("Bus saved:", response.data);

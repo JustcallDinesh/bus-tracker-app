@@ -17,7 +17,7 @@ function SchedulesPage() {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/schedules");
+        const response = await axios.get("http://localhost:5001/api/schedules");
         setSchedules(response.data);
         setLoading(false);
       } catch (error) {
@@ -45,7 +45,7 @@ function SchedulesPage() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/schedules/${scheduleToDeleteId}`
+        `http://localhost:5001/api/schedules/${scheduleToDeleteId}`
       );
       setSchedules(
         schedules.filter((schedule) => schedule._id !== scheduleToDeleteId)

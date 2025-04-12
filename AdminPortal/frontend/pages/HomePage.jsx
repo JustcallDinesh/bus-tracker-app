@@ -1,13 +1,51 @@
 // bus-tracker-admin-frontend/src/pages/HomePage.jsx
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function HomePage() {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  useEffect(() => {
+    const storedUsername = localStorage.getItem("username");
+    if (storedUsername) {
+      setUsername(storedUsername);
+    } else {
+      const storedAuthToken = localStorage.getItem("authToken");
+      if (!storedAuthToken) {
+        navigate("/login"); // Redirect to login if no token
+      }
+      // If you have user details in the token or a separate API call, you might fetch it here
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("username"); // Clear username as well
+    navigate("/login");
+  };
+
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Bus Tracker Admin Dashboard</h1>
+      <div className=" flex justify-between">
+        <h1 className="text-3xl font-bold mb-6">Bus Tracker Admin Dashboard</h1>
+        <div className="container mx-auto p-6 flex gap-10">
+          {username && (
+            <p className="mb-4">
+              Welcome, <span className="font-semibold">{username}</span>!
+            </p>
+          )}
+          <button
+            onClick={handleLogout}
+            className="bg-green-700 hover:bg-pink-600 cursor-pointer rounded-full text-white font-bold py-2 px-4 focus:outline-none focus:shadow-outline"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        ``
         <Link
           to="/routes"
           className="block p-6 bg-white rounded-md shadow-md hover:shadow-lg transition duration-300"
@@ -15,7 +53,6 @@ function HomePage() {
           <h2 className="text-xl font-semibold mb-2">Route Management</h2>
           <p className="text-gray-600">Add, edit, and manage bus routes.</p>
         </Link>
-
         <Link
           to="/buses"
           className="block p-6 bg-white rounded-md shadow-md hover:shadow-lg transition duration-300"
@@ -25,7 +62,6 @@ function HomePage() {
             Add, edit, and manage the fleet of buses.
           </p>
         </Link>
-
         <Link
           to="/notifications"
           className="block p-6 bg-white rounded-md shadow-md hover:shadow-lg transition duration-300"
@@ -37,7 +73,6 @@ function HomePage() {
             Send and manage notifications to users.
           </p>
         </Link>
-
         <Link
           to="/admin/users"
           className="block p-6 bg-white rounded-md shadow-md hover:shadow-lg transition duration-300"
@@ -47,7 +82,6 @@ function HomePage() {
             Manage administrator accounts and roles.
           </p>
         </Link>
-
         <Link
           to="/schedules"
           className="block p-6 bg-white rounded-md shadow-md hover:shadow-lg transition duration-300"

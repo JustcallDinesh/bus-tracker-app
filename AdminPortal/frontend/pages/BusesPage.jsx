@@ -17,9 +17,9 @@ function BusesPage() {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses");
         setBuses(response.data);
-        console.log("---------->", response.data);
+        // console.log("---------->", response.data);
         setLoading(false);
       } catch (error) {
         console.error(
@@ -45,7 +45,7 @@ function BusesPage() {
     setDeleteSuccessMessage("");
 
     try {
-      await axios.delete(`http://localhost:5000/api/buses/${busToDeleteId}`);
+      await axios.delete(`http://localhost:5001/api/buses/${busToDeleteId}`);
       setBuses(buses.filter((bus) => bus._id !== busToDeleteId));
       setDeleteSuccessMessage("Bus deleted successfully.");
       fetchBuses();

@@ -20,7 +20,7 @@ function EditAdminUserForm() {
       setError("");
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/admin/users/${id}`
+          `http://localhost:5001/api/admin/users/${id}`
         );
         const userData = response.data;
         setUsername(userData.username);
@@ -82,7 +82,7 @@ function EditAdminUserForm() {
 
     try {
       const response = await axios.patch(
-        `http://localhost:5000/api/admin/users/${id}`,
+        `http://localhost:5001/api/admin/users/${id}`,
         updatedAdminUser
       );
       console.log("Admin user updated:", response.data);

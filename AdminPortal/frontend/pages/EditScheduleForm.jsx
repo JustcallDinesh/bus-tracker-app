@@ -30,7 +30,7 @@ function EditScheduleForm() {
       setScheduleError("");
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/schedules/${id}`
+          `http://localhost:5001/api/schedules/${id}`
         );
         const scheduleData = response.data;
         setRoute(scheduleData.route?._id || "");
@@ -62,7 +62,7 @@ function EditScheduleForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes");
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -81,7 +81,7 @@ function EditScheduleForm() {
       setLoadingBuses(true);
       setBusesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses");
         setBusesList(response.data);
         setLoadingBuses(false);
       } catch (error) {

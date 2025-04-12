@@ -25,7 +25,7 @@ function SendNotificationForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes");
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -44,7 +44,7 @@ function SendNotificationForm() {
       setLoadingBuses(true);
       setBusesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses");
         setBusesList(response.data);
         setLoadingBuses(false);
       } catch (error) {
@@ -96,7 +96,7 @@ function SendNotificationForm() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/notifications",
+        "http://localhost:5001/api/notifications",
         newNotification
       );
       console.log("Notification sent:", response.data);

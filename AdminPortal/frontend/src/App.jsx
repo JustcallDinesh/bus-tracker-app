@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import RoutesPage from "../pages/RoutePage";
 import AddRouteForm from "../pages/AddRouteForm";
 import EditRouteForm from "../pages/EditRouteForm";
@@ -15,13 +15,30 @@ import SchedulesPage from "../pages/SchedulesPage";
 import AddScheduleForm from "../pages/AddScheduleForm";
 import EditScheduleForm from "../pages/EditScheduleForm";
 import HomePage from "../pages/HomePage";
+import LoginForm from "../Components/LoginForm";
+import RegisterForm from "../Components/RegisterForm";
+import UnapprovedUsersPage from "../Components/UnapprovedUsersPage";
+
+const ProtectedRoute = ({ children }) => {
+  const authToken = localStorage.getItem("authToken");
+  return authToken ? children : <Navigate to="/login" />;
+};
 
 function App() {
   return (
     <Routes>
+      <Route path="/login" element={<LoginForm />} />
+      <Route path="/register" element={<RegisterForm />} />
       <Route path="/" element={<HomePage />} />
 
-      <Route path="/routes" element={<RoutesPage />} />
+      <Route
+        path="/routes"
+        element={
+          <ProtectedRoute>
+            <RoutesPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/routes/add" element={<AddRouteForm />} />
       <Route path="/routes/edit/:id" element={<EditRouteForm />} />
 
@@ -39,6 +56,15 @@ function App() {
       <Route path="/schedules" element={<SchedulesPage />} />
       <Route path="/schedules/add" element={<AddScheduleForm />} />
       <Route path="/schedules/edit/:id" element={<EditScheduleForm />} />
+
+      <Route
+        path="/admin/users/unapproved"
+        element={
+          <ProtectedRoute>
+            <UnapprovedUsersPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

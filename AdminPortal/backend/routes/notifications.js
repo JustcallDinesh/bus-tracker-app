@@ -19,6 +19,7 @@ router.get('/', async (req, res) => {
 // POST a new notification
 router.post('/', async (req, res) => {
     const { recipientType, recipientTarget, title, body, sentBy } = req.body;
+    console.log(recipientType, recipientTarget, title.body, sentBy);
 
     // Validate sentBy (assuming you have middleware to get the current admin user ID)
     const adminUser = await AdminUser.findById(sentBy);

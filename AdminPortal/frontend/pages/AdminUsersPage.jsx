@@ -17,8 +17,14 @@ function AdminUsersPage() {
       setLoading(true);
       setError("");
       try {
+        const token = localStorage.getItem("authToken");
         const response = await axios.get(
-          "http://localhost:5000/api/admin/users"
+          "http://localhost:5001/api/admin/users",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setAdminUsers(response.data);
         setLoading(false);
@@ -49,12 +55,10 @@ function AdminUsersPage() {
 
     try {
       await axios.delete(
-        `http://localhost:5000/api/admin/users/${userToDeleteId}`
+        `http://localhost:5001/api/admin/users/${userToDeleteId}`
       );
       setAdminUsers(adminUsers.filter((user) => user._id !== userToDeleteId));
       setDeleteSuccessMessage("Admin user deleted successfully.");
-      // Optionally refresh the list
-      fetchAdminUsers();
     } catch (error) {
       console.error(
         "Error deleting admin user:",
@@ -157,6 +161,12 @@ function AdminUsersPage() {
               >
                 Roles
               </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Status
+              </th>
               <th scope="col" className="relative px-6 py-3">
                 <span className="sr-only">Actions</span>
               </th>
@@ -175,7 +185,10 @@ function AdminUsersPage() {
                   {user.email}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {user.roles.join(", ")}
+                  {user.role}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {user.approvedBySuperAdmin ? "Approved" : "Pending..."}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link

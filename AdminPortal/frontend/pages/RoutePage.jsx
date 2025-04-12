@@ -16,9 +16,9 @@ function RoutesPage() {
       setLoading(true);
       setError("");
       try {
-        console.log("-.-.--.-.-.-------------------------------");
-        const response = await axios.get("http://localhost:5000/api/routes");
-        console.log("-.-.--.-.-.-", response.data);
+        // console.log("-.-.--.-.-.-------------------------------");
+        const response = await axios.get("http://localhost:5001/api/routes");
+        // console.log("-.-.--.-.-.-", response.data);
         setRoutes(response.data);
         setLoading(false);
       } catch (error) {
@@ -45,7 +45,7 @@ function RoutesPage() {
     setDeleteSuccessMessage("");
 
     try {
-      await axios.delete(`http://localhost:5000/api/routes/${routeToDeleteId}`);
+      await axios.delete(`http://localhost:5001/api/routes/${routeToDeleteId}`);
       setRoutes(routes.filter((route) => route._id !== routeToDeleteId));
       setDeleteSuccessMessage("Route deleted successfully.");
     } catch (error) {

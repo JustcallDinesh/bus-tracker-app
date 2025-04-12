@@ -11,10 +11,20 @@ function AddAdminUserForm() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("viewer"); // Default role
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSuperAdmin, setisSuperAdmin] = useState(false);
   // const { user } = useContext(AuthContext); // Get logged-in user info from context
 
   // Replace this with your actual way of checking if the logged-in user is a superadmin
-  const isSuperAdmin = true; // For now, hardcode. You'll use your auth context later
+  // const isSuperAdmin = true; // For now, hardcode. You'll use your auth context later
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("userRole");
+    if (storedRole === "superadmin") {
+      setisSuperAdmin(true);
+    } else {
+      setisSuperAdmin(false);
+    }
+  }, []);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -50,7 +60,7 @@ function AddAdminUserForm() {
     try {
       const token = localStorage.getItem("authToken"); // Assuming you store the token in localStorage
       const response = await axios.post(
-        "http://localhost:5000/api/admin/users",
+        "http://localhost:5001/api/admin/users",
         newUser,
         {
           headers: {
@@ -66,7 +76,8 @@ function AddAdminUserForm() {
         error.response?.data?.message || error.message
       );
       setErrorMessage(
-        error.response?.data?.message || "Failed to create admin user."
+        error.response?.data?.message + "You cannot Access " ||
+          "Failed to create admin user."
       );
     }
   };

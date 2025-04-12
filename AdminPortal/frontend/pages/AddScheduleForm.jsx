@@ -26,7 +26,7 @@ function AddScheduleForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes");
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -45,7 +45,7 @@ function AddScheduleForm() {
       setLoadingBuses(true);
       setBusesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses");
         setBusesList(response.data);
         setLoadingBuses(false);
       } catch (error) {
@@ -126,7 +126,7 @@ function AddScheduleForm() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/schedules",
+        "http://localhost:5001/api/schedules",
         newSchedule
       );
       console.log("Schedule saved:", response.data);

@@ -23,7 +23,7 @@ function EditBusForm() {
       setBusError("");
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/buses/${id}`
+          `http://localhost:5001/api/buses/${id}`
         );
         const busData = response.data;
         setRegistrationNumber(busData.registrationNumber);
@@ -47,7 +47,7 @@ function EditBusForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5000/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes");
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -99,7 +99,7 @@ function EditBusForm() {
 
     try {
       const response = await axios.patch(
-        `http://localhost:5000/api/buses/${id}`,
+        `http://localhost:5001/api/buses/${id}`,
         updatedBus
       );
       console.log("Bus updated:", response.data);

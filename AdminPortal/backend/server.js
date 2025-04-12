@@ -4,37 +4,41 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-const uri = process.env.ATLAS_URI; // Make sure this is in your .env file
+const uri = process.env.ATLAS_URI;
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB Database Connected'))
-    .catch(err => console.log('MongoDB connection Failed', err));
+    .then(() => console.log("MONGODB Connected"))
+    .catch((err) => console.log('MONGODB Connection failed', err));
 
-const routesRouter = require('./routes/routes');//check
+const routesRouter = require('./routes/routes');
 const busesRouter = require('./routes/buses');
 const schedulesRouter = require('./routes/schedules');
-const notificationsRouter = require('./routes/notifications');
+const notificationsRoutes = require('./routes/notifications');
 const adminUsersRouter = require('./routes/adminUsers');
+const authRouter = require('./routes/auth');
 
 
-
-app.use('/api/routes', routesRouter);//check
+app.use('/api/routes', routesRouter);
 app.use('/api/buses', busesRouter);
 app.use('/api/schedules', schedulesRouter);
-app.use('/api/notifications', notificationsRouter);
+app.use('/api/notifications', notificationsRoutes);
 app.use('/api/admin/users', adminUsersRouter);
-
+app.use('/api/auth', authRouter);
 
 app.get('/', (req, res) => {
-    res.send('Bus Tracker Admin Backend is running!');
+    res.send("Bus tracker backend running ");
 });
 
-app.listen(port, () => {
-    console.log(`Server running on port: ${port}`);
+
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, (err) => {
+    if (err) {
+        console.log(err);
+    } else {
+        console.log(`Server Running on Port ${PORT}`);
+    }
 });
