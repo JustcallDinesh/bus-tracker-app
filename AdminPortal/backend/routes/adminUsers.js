@@ -1,6 +1,7 @@
 // bus-tracker-admin-backend/routes/adminUsers.js
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const AdminUser = require('../models/adminUser');
 const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
 
@@ -124,6 +125,36 @@ router.patch('/:id/approval', requireAuth, requireSuperAdmin, async (req, res) =
     }
 });
 
+router.patch('/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const { username, email, password } = req.body;
+
+    try {
+        const existingUser = await AdminUser.findById(id);
+        if (!existingUser) {
+            return res.status(404).json({ message: 'Admin user not found' });
+        }
+
+        existingUser.username = username;
+        existingUser.email = email;
+        existingUser.password = password;
+
+        const updatedUser = await existingUser.save();
+        res.json(updatedUser);
+
+    } catch (error) {
+        console.error('Error updating admin user:', error);
+        res.status(500).json({ message: 'Failed to update admin user.' });
+    }
+});
+
+
+
+
+
 
 
 module.exports = router;
+// console.log("Received Current Password:", currentPassword);
+// console.log("Received Stored Hash Password:", existingUser.password);
+// console.log("New Password provided:", password);

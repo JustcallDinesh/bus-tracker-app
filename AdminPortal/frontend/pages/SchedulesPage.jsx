@@ -17,7 +17,14 @@ function SchedulesPage() {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/schedules");
+        const response = await axios.get(
+          "http://localhost:5001/api/schedules",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
+        );
         setSchedules(response.data);
         setLoading(false);
       } catch (error) {
@@ -51,7 +58,6 @@ function SchedulesPage() {
         schedules.filter((schedule) => schedule._id !== scheduleToDeleteId)
       );
       setDeleteSuccessMessage("Schedule deleted successfully.");
-      fetchSchedules();
     } catch (error) {
       console.error(
         "Error deleting schedule:",

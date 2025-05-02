@@ -6,7 +6,7 @@ import axios from "axios";
 function EditBusForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [busNumber, setBusNumber] = useState("");
   const [model, setModel] = useState("");
   const [capacity, setCapacity] = useState("");
   const [route, setRoute] = useState("");
@@ -23,10 +23,15 @@ function EditBusForm() {
       setBusError("");
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/buses/${id}`
+          `http://localhost:5001/api/buses/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
         );
         const busData = response.data;
-        setRegistrationNumber(busData.registrationNumber);
+        setBusNumber(busData.busNumber);
         setModel(busData.model);
         setCapacity(busData.capacity);
         setRoute(busData.route ? busData.route._id : ""); // Set route ID if available
@@ -47,7 +52,12 @@ function EditBusForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        // console.log("Response Get", response.data);
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -66,11 +76,13 @@ function EditBusForm() {
     fetchRoutes();
   }, [id]);
 
+  // console.log("Route List", routesList);
+
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     switch (name) {
-      case "registrationNumber":
-        setRegistrationNumber(value);
+      case "busNumber":
+        setBusNumber(value);
         break;
       case "model":
         setModel(value);
@@ -91,17 +103,23 @@ function EditBusForm() {
     setErrorMessage("");
 
     const updatedBus = {
-      registrationNumber,
+      busNumber,
       model,
       capacity: parseInt(capacity, 10),
-      route,
+      assignedRoute: route,
     };
 
     try {
       const response = await axios.patch(
         `http://localhost:5001/api/buses/${id}`,
-        updatedBus
+        updatedBus,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
+      console.log("Response from Id", response.data);
       console.log("Bus updated:", response.data);
       navigate("/buses");
     } catch (error) {
@@ -135,13 +153,13 @@ function EditBusForm() {
             htmlFor="registrationNumber"
             className="block text-gray-700 text-sm font-bold mb-2"
           >
-            Registration Number:
+            Bus Number:
           </label>
           <input
             type="text"
-            id="registrationNumber"
-            name="registrationNumber"
-            value={registrationNumber}
+            id="busNumber"
+            name="busNumber"
+            value={busNumber}
             onChange={handleInputChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             required

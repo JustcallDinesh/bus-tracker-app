@@ -93,6 +93,7 @@ const SearchFields: React.FC<SearchFeildsProbs> = ({ onSearch }) => {
             const response = await axios.get(
                 `${config.apibaseUrl}/findRoutes?from=${from}&to=${to}`
             );
+            console.log("response Data from SearchFeilds ", response.data.length + "--->", response.data);
 
             navigation.navigate("SearchResults", {
                 from: from,

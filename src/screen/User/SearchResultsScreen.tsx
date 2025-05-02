@@ -295,26 +295,60 @@ const SearchResultsScreen = ({ navigation, route }) => {
             let departureTime = '';
             let arrivalTime = '';
 
-            for (const trip of item.trips) {
-              for (const routeSegment of trip.busRoute) {
-                const fromCity = routeSegment.from.cityName.trim().toLowerCase();
-                const toCity = routeSegment.to.cityName.trim().toLowerCase();
-                const searchedFrom = from.trim().toLowerCase();
-                const searchedTo = to.trim().toLowerCase();
+            // console.log("ITEM", item);
 
-                if (fromCity === searchedFrom && toCity === searchedTo) {
-                  displayedFrom = routeSegment.from.cityName;
-                  displayedTo = routeSegment.to.cityName;
-                  departureTime = formatTimeFromISO(routeSegment.from.departureTime);
-                  arrivalTime = formatTimeFromISO(routeSegment.to.arrivalTime);
-                  foundMatch = true;
+            if (item.trips.length > 0) {
+
+              for (const trip of item.trips) {
+                for (const routeSegment of trip.busRoute) {
+                  const fromCity = routeSegment.from.cityName.trim().toLowerCase();
+                  const toCity = routeSegment.to.cityName.trim().toLowerCase();
+                  const searchedFrom = from.trim().toLowerCase();
+                  const searchedTo = to.trim().toLowerCase();
+
+                  if (fromCity === searchedFrom && toCity === searchedTo) {
+                    displayedFrom = routeSegment.from.cityName;
+                    displayedTo = routeSegment.to.cityName;
+                    departureTime = formatTimeFromISO(routeSegment.from.departureTime);
+                    arrivalTime = formatTimeFromISO(routeSegment.to.arrivalTime);
+                    foundMatch = true;
+                    break;
+                  }
+                }
+                if (foundMatch) {
                   break;
                 }
               }
-              if (foundMatch) {
-                break;
+            } else {
+              for (const trip of item.assignedRoute.trips) {
+                for (const routeSegment of trip.busRoute) {
+                  const fromCity = routeSegment.from.cityName.trim().toLowerCase();
+                  const toCity = routeSegment.to.cityName.trim().toLowerCase();
+                  const searchedFrom = from.trim().toLowerCase();
+                  const searchedTo = to.trim().toLowerCase();
+
+                  if (fromCity === searchedFrom && toCity === searchedTo) {
+                    displayedFrom = routeSegment.from.cityName;
+                    displayedTo = routeSegment.to.cityName;
+                    departureTime = routeSegment.from.departureTime || formatTimeFromISO(routeSegment.from.departureTime);
+                    arrivalTime = routeSegment.to.arrivalTime || formatTimeFromISO(routeSegment.to.arrivalTime);
+                    foundMatch = true;
+                    console.log(departureTime, arrivalTime)
+
+                    // if (departureTime && arrivalTime) {
+                    //   let dep = departureTime.split(' ')
+                    //   console.log(dep);
+                    // }
+                    break;
+                  }
+                }
+                if (foundMatch) {
+                  break;
+                }
               }
+
             }
+
 
             if (!foundMatch) {
               return null; // Skip rendering if no matching route segment is found
@@ -351,9 +385,12 @@ const SearchResultsScreen = ({ navigation, route }) => {
                     <Icon name="radio-outline" size={16} color="blue" style={styles.icon} />
                     <Text style={styles.infoText}>{item.amenities.length === 0 ? "" : item.amenities.length} Amenity </Text>
                   </View>
-                  <View style={styles.infoItemtimeContainer}>
-                    <Text style={styles.infoTextTime}>{departureTime} - {arrivalTime} </Text>
-                  </View>
+                  {departureTime && arrivalTime && (
+
+                    <View style={styles.infoItemtimeContainer}>
+                      <Text style={styles.infoTextTime}>{departureTime} - {arrivalTime} </Text>
+                    </View>
+                  )}
                 </View>
                 <View style={styles.bottomLieInFlat}>
                   <View style={styles.bottomlie}>

@@ -17,8 +17,12 @@ function RoutesPage() {
       setError("");
       try {
         // console.log("-.-.--.-.-.-------------------------------");
-        const response = await axios.get("http://localhost:5001/api/routes");
-        // console.log("-.-.--.-.-.-", response.data);
+        const response = await axios.get("http://localhost:5001/api/routes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        console.log("-.-.--.-.-.-", response.data);
         setRoutes(response.data);
         setLoading(false);
       } catch (error) {
@@ -45,7 +49,14 @@ function RoutesPage() {
     setDeleteSuccessMessage("");
 
     try {
-      await axios.delete(`http://localhost:5001/api/routes/${routeToDeleteId}`);
+      await axios.delete(
+        `http://localhost:5001/api/routes/${routeToDeleteId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
+      );
       setRoutes(routes.filter((route) => route._id !== routeToDeleteId));
       setDeleteSuccessMessage("Route deleted successfully.");
     } catch (error) {
@@ -164,10 +175,10 @@ function RoutesPage() {
                   {route.routeName}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {route.origin.name}
+                  {route.trips[0].busRoute[0].from.cityName || "No Name"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {route.destination.name}
+                  {route.trips[0].busRoute[0].to.cityName || "No Name"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link

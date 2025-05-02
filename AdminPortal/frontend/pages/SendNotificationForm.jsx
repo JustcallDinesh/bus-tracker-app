@@ -25,7 +25,11 @@ function SendNotificationForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -44,7 +48,11 @@ function SendNotificationForm() {
       setLoadingBuses(true);
       setBusesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setBusesList(response.data);
         setLoadingBuses(false);
       } catch (error) {
@@ -86,9 +94,19 @@ function SendNotificationForm() {
     event.preventDefault();
     setErrorMessage("");
 
+    let recipientModelValue = "";
+    if (recipientType === "route") {
+      recipientModelValue = "Route";
+    } else if (recipientType === "bus") {
+      recipientModelValue = "Bus";
+    } else if (recipientType === "user") {
+      recipientModelValue = "User";
+    }
+
     const newNotification = {
       recipientType,
       recipientTarget: recipientType === "all" ? null : recipientTarget,
+      recipientModel: recipientType === "all" ? null : recipientModelValue,
       title,
       body,
       sentBy,
@@ -97,7 +115,12 @@ function SendNotificationForm() {
     try {
       const response = await axios.post(
         "http://localhost:5001/api/notifications",
-        newNotification
+        newNotification,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
       console.log("Notification sent:", response.data);
       navigate("/notifications");
@@ -189,7 +212,7 @@ function SendNotificationForm() {
               <option value="">Select a Bus</option>
               {busesList.map((b) => (
                 <option key={b._id} value={b._id}>
-                  {b.registrationNumber} ({b.model})
+                  {b.busName}
                 </option>
               ))}
             </select>

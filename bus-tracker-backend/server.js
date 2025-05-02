@@ -6,6 +6,8 @@ const cors = require("cors");
 const multer = require("multer");
 const { types } = require("@babel/core");
 const upload = multer({ storage: multer.memoryStorage() });
+// const busesRouter = require('../AdminPortal/backend/models/bus');
+// const routesRouter = require('../AdminPortal/backend/models/route');
 
 const app = express();
 app.use(cors());
@@ -32,12 +34,67 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", userSchema);
 
-// Bus Model
+//Old Bus Model
 const busSchema = new mongoose.Schema({
   busName: { type: String, required: true },
   busNumber: { type: String, required: true },
   busType: [{ type: String }],
   amenities: [{ type: String }],
+  isGovernt: { type: Boolean, default: true },
+  // busTypegvt: {
+  //   type: String,
+  //   enum: ['private', 'government'],
+  //   default: 'private',
+  // },
+  trips: [
+    {
+      busRoute: [
+        {
+          from: {
+            cityName: String,
+            departureTime: String,
+            latitude: Number,
+            longitude: Number,
+          },
+          to: {
+            cityName: String,
+            arrivalTime: String,
+            latitude: Number,
+            longitude: Number,
+          },
+        },
+      ],
+      busStops: [
+        {
+          name: { type: String, required: true },
+          latitude: { type: Number },
+          longitude: { type: Number },
+        },
+      ],
+    },
+
+  ],
+  // busImageUri:{type:String},
+
+  // registrationNumber: { type: String, required: true, unique: true },
+  capacity: { type: Number, required: true },
+  model: { type: String },
+  assignedRoute: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Route', // Reference to the Route model
+  },
+  // owner: { type: mongoose.Schema.Types.ObjectId, ref: 'adminUser', required: true },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+
+});
+const Bus = mongoose.model('Bus', busSchema);
+
+const routeSchema = new mongoose.Schema({
+  routeName: {
+    type: String,
+
+  },
   trips: [
     {
       busRoute: [
@@ -65,18 +122,30 @@ const busSchema = new mongoose.Schema({
       ],
     },
   ],
-  isGovernt: { type: Boolean, default: true },
-  // busImageUri:{type:String},
+  status: {
+    type: String,
+    enum: ['Active', 'Inactive'],
+    default: 'Active'
+  },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'adminUser', required: true },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-const Bus = mongoose.model("Bus", busSchema);
+const Route = mongoose.model('Route', routeSchema);
 
 // Add Bus Endpoint
 app.post("/addBus", async (req, res) => {
   try {
     // console.log(req.body);
 
-    const { busName, busNumber, busType, amenities, trips, isGovernt } = req.body;
+    const { busName, busNumber, busType, amenities, capacity, trips, isGovernt } = req.body;
 
     if (!trips || !Array.isArray(trips)) {
       return res.status(400).json({ message: "Invalid trips data: trips must be an array" });
@@ -152,6 +221,7 @@ app.post("/addBus", async (req, res) => {
       busNumber,
       busType,
       amenities,
+      capacity,
       trips,
       isGovernt,
     });
@@ -233,20 +303,54 @@ function authenticateToken(req, res, next) {
 }
 
 // New Route Finder Endpoint
+// app.get("/findRoutes", async (req, res) => {
+//   try {
+//     // console.log("called function");
+//     const { from, to } = req.query;
+
+//     let foundRoutes;
+
+//     if (from && to) {
+//       const trimmedFrom = from.trim().toLowerCase();
+//       const trimmedTo = to.trim().toLowerCase();
+
+//       // console.log(from, to);
+
+//       foundRoutes = await Bus.find({
+//         trips: {
+//           $elemMatch: {
+//             busRoute: {
+//               $elemMatch: {
+//                 "from.cityName": { $regex: new RegExp(trimmedFrom, "i") },
+//                 "to.cityName": { $regex: new RegExp(trimmedTo, "i") },
+//               },
+//             },
+//           },
+//         },
+//       });
+//       // console.log("Founded Routes", foundRoutes);
+//     } else {
+//       foundRoutes = await Bus.find({});
+//     }
+
+//     res.json(foundRoutes);
+//   } catch (err) {
+//     console.error("Find Routes Error:", err);
+//     res.status(500).json({ message: "Failed to find routes", error: err.message });
+//   }
+// });
+
 app.get("/findRoutes", async (req, res) => {
   try {
-    // console.log("called function");
     const { from, to } = req.query;
-
-    let foundRoutes;
+    let foundBuses = [];
 
     if (from && to) {
       const trimmedFrom = from.trim().toLowerCase();
       const trimmedTo = to.trim().toLowerCase();
 
-      // console.log(from, to);
-
-      foundRoutes = await Bus.find({
+      // 1. Search buses based on trips directly within the Bus model (existing logic)
+      const busesWithOldStructure = await Bus.find({
         trips: {
           $elemMatch: {
             busRoute: {
@@ -258,15 +362,52 @@ app.get("/findRoutes", async (req, res) => {
           },
         },
       });
-      // console.log("Founded Routes", foundRoutes);
+      foundBuses.push(...busesWithOldStructure);
+
+      // 2. Search buses based on assignedRoute and the trips within that Route
+      const busesWithNewStructure = await Bus.find({
+        assignedRoute: { $ne: null } // Only consider buses that have an assignedRoute
+      }).populate({
+        path: 'assignedRoute',
+        match: {
+          'trips.busRoute': {
+            $elemMatch: {
+              'from.cityName': { $regex: new RegExp(trimmedFrom, 'i') },
+              'to.cityName': { $regex: new RegExp(trimmedTo, 'i') },
+            },
+          },
+        },
+      });
+
+      // Filter out buses where the populated assignedRoute doesn't match the criteria
+      const matchingNewBuses = busesWithNewStructure.filter(bus => bus.assignedRoute !== null);
+      foundBuses.push(...matchingNewBuses);
+
     } else {
-      foundRoutes = await Bus.find({});
+      // If no search terms, return all buses (populated with assignedRoute)
+      const allBuses = await Bus.find().populate('assignedRoute');
+      foundBuses = allBuses;
     }
 
-    res.json(foundRoutes);
-  } catch (err) {
-    console.error("Find Routes Error:", err);
-    res.status(500).json({ message: "Failed to find routes", error: err.message });
+    // Ensure unique buses in the result
+    const uniqueBuses = Array.from(new Map(foundBuses.map(bus => [bus._id, bus])).values());
+
+    res.json(uniqueBuses);
+
+  } catch (error) {
+    console.error("Find Routes Error:", error);
+    res.status(500).json({ message: "Failed to find routes", error: error.message });
+  }
+});
+
+// Modified Initial Data Endpoint (populating origin and destination)
+app.get("/initialNewRoutes", async (req, res) => {
+  try {
+    const allBuses = await NewBus.find().populate('assignedRoute'); // Populate the entire assignedRoute
+    res.status(200).json(allBuses);
+  } catch (error) {
+    console.error("Error fetching initial new buses:", error);
+    res.status(500).json({ message: "Failed to fetch initial bus data", error: error.message });
   }
 });
 

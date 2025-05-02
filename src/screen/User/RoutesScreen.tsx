@@ -65,6 +65,7 @@ const RouteScreen = () => {
         const response = await axios.get(
           `${config.apibaseUrl}/findRoutes`
         );
+        // console.log(response.data);
         //findRoutes
         if (response.data) {
           setBusRoutes(response.data);

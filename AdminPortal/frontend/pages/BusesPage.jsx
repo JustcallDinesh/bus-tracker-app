@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import api from "../src/services/api";
 
 function BusesPage() {
   const [buses, setBuses] = useState([]);
@@ -17,9 +18,14 @@ function BusesPage() {
       setLoading(true);
       setError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/buses");
+        const response = await api.get("http://localhost:5001/api/buses", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        // console.log(response.data);
         setBuses(response.data);
-        // console.log("---------->", response.data);
+        console.log("---------->", response.data);
         setLoading(false);
       } catch (error) {
         console.error(
@@ -48,7 +54,6 @@ function BusesPage() {
       await axios.delete(`http://localhost:5001/api/buses/${busToDeleteId}`);
       setBuses(buses.filter((bus) => bus._id !== busToDeleteId));
       setDeleteSuccessMessage("Bus deleted successfully.");
-      fetchBuses();
     } catch (error) {
       console.error(
         "Error deleting bus:",
@@ -133,7 +138,7 @@ function BusesPage() {
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                Registration
+                BusNumber
               </th>
               <th
                 scope="col"
@@ -172,7 +177,7 @@ function BusesPage() {
                   {bus._id}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {bus.registrationNumber}
+                  {bus.busNumber}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {bus.capacity}

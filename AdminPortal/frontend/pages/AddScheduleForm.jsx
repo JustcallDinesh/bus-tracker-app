@@ -26,7 +26,11 @@ function AddScheduleForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -45,7 +49,11 @@ function AddScheduleForm() {
       setLoadingBuses(true);
       setBusesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setBusesList(response.data);
         setLoadingBuses(false);
       } catch (error) {
@@ -127,7 +135,12 @@ function AddScheduleForm() {
     try {
       const response = await axios.post(
         "http://localhost:5001/api/schedules",
-        newSchedule
+        newSchedule,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
       console.log("Schedule saved:", response.data);
       navigate("/schedules");
@@ -274,7 +287,7 @@ function AddScheduleForm() {
             <option value="">Select a Bus</option>
             {busesList.map((bus) => (
               <option key={bus._id} value={bus._id}>
-                {bus.registrationNumber} ({bus.model})
+                {bus.busName}
               </option>
             ))}
           </select>

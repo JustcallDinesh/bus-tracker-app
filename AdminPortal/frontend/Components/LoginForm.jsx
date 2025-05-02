@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import api from "../src/services/api";
 
 function LoginForm() {
   const navigate = useNavigate();
@@ -14,16 +15,20 @@ function LoginForm() {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5001/api/auth/login",
-        { username, password }
-      );
-      console.log("fetching finishing");
-      localStorage.setItem("authToken", response.data.token);
+      const response = await api.post("http://localhost:5001/api/auth/login", {
+        username,
+        password,
+      });
+      const { accessToken, refreshToken, user } = response.data;
+
+      console.log(response.data);
+
       localStorage.setItem("userRole", response.data.user.role);
-      console.log("Login successful:", response.data);
       localStorage.setItem("username", response.data.user.username);
-      navigate("/"); // Redirect to the admin users page after login
+      localStorage.setItem("authToken", accessToken);
+      console.log("Login successful:", response.data);
+      localStorage.setItem("refreshToken", refreshToken);
+      navigate("/");
     } catch (loginError) {
       console.error(
         "Login failed:",

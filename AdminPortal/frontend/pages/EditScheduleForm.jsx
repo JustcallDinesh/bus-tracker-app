@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
+import api from "../src/services/api";
 
 function EditScheduleForm() {
   const { id } = useParams();
@@ -30,7 +31,12 @@ function EditScheduleForm() {
       setScheduleError("");
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/schedules/${id}`
+          `http://localhost:5001/api/schedules/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
         );
         const scheduleData = response.data;
         setRoute(scheduleData.route?._id || "");
@@ -62,7 +68,11 @@ function EditScheduleForm() {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -81,7 +91,11 @@ function EditScheduleForm() {
       setLoadingBuses(true);
       setBusesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/buses");
+        const response = await axios.get("http://localhost:5001/api/buses", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setBusesList(response.data);
         setLoadingBuses(false);
       } catch (error) {
@@ -162,9 +176,14 @@ function EditScheduleForm() {
     };
 
     try {
-      const response = await axios.patch(
-        `http://localhost:5000/api/schedules/${id}`,
-        updatedSchedule
+      const response = await api.patch(
+        `http://localhost:5001/api/schedules/${id}`,
+        updatedSchedule,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
       console.log("Schedule updated:", response.data);
       navigate("/schedules");
@@ -323,7 +342,7 @@ function EditScheduleForm() {
             <option value="">Select a Bus</option>
             {busesList.map((bus) => (
               <option key={bus._id} value={bus._id}>
-                {bus.registrationNumber} ({bus.model})
+                {bus.busName}
               </option>
             ))}
           </select>

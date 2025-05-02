@@ -6,13 +6,22 @@ function EditRouteForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [routeName, setRouteName] = useState("");
-  const [originName, setOriginName] = useState("");
-  const [originLatitude, setOriginLatitude] = useState("");
-  const [originLongitude, setOriginLongitude] = useState("");
-  const [destinationName, setDestinationName] = useState("");
-  const [destinationLatitude, setDestinationLatitude] = useState("");
-  const [destinationLongitude, setDestinationLongitude] = useState("");
-  const [stops, setStops] = useState([]);
+  const [trips, setTrips] = useState([
+    {
+      busRoute: [
+        {
+          from: {
+            cityName: "",
+            departureTime: "",
+            latitude: "",
+            longitude: "",
+          },
+          to: { cityName: "", arrivalTime: "", latitude: "", longitude: "" },
+        },
+      ],
+      busStops: [{ name: "", latitude: "", longitude: "" }],
+    },
+  ]);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,20 +31,17 @@ function EditRouteForm() {
       setErrorMessage("");
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/routes/${id}`
+          `http://localhost:5001/api/routes/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
         );
         const routeData = response.data;
-        setRouteName(routeData.routeName);
-        setOriginName(routeData.origin.name);
-        setOriginLatitude(routeData.origin.coordinates.latitude);
-        setOriginLongitude(routeData.origin.coordinates.longitude);
-        setDestinationName(routeData.destination.name);
-        setDestinationLatitude(routeData.destination.coordinates.latitude);
-        setDestinationLongitude(routeData.destination.coordinates.longitude);
         console.log(routeData);
-
-        setStops(routeData.stops.sort((a, b) => a.order - b.order)); // Ensure stops are ordered
-
+        setRouteName(routeData.routeName);
+        setTrips(routeData.trips); // Directly set the trips data
         setLoading(false);
       } catch (error) {
         console.error(
@@ -47,7 +53,6 @@ function EditRouteForm() {
         );
         setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchRoute();
@@ -55,51 +60,75 @@ function EditRouteForm() {
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    switch (name) {
-      case "routeName":
-        setRouteName(value);
-        break;
-      case "originName":
-        setOriginName(value);
-        break;
-      case "originLatitude":
-        setOriginLatitude(value);
-        break;
-      case "originLongitude":
-        setOriginLongitude(value);
-        break;
-      case "destinationName":
-        setDestinationName(value);
-        break;
-      case "destinationLatitude":
-        setDestinationLatitude(value);
-        break;
-      case "destinationLongitude":
-        setDestinationLongitude(value);
-        break;
-      default:
-        break;
+    if (name === "routeName") {
+      setRouteName(value);
     }
   };
 
-  const handleStopChange = (index, event) => {
+  const handleTripChange = (tripIndex, event) => {
     const { name, value } = event.target;
-    const newStops = [...stops];
-    newStops[index][name] = value;
-    setStops(newStops);
+    const [nestedField, ...rest] = name.split(".");
+    const newTrips = [...trips];
+
+    if (nestedField === "from" || nestedField === "to") {
+      const [fromTo, prop] = rest;
+      newTrips[tripIndex].busRoute[0][fromTo][prop] = value;
+    }
+
+    setTrips(newTrips);
   };
 
-  const addStop = () => {
-    setStops([
-      ...stops,
-      { name: "", latitude: "", longitude: "", order: stops.length + 1 },
+  const handleStopChange = (tripIndex, stopIndex, event) => {
+    const { name, value } = event.target;
+    const newTrips = [...trips];
+    newTrips[tripIndex].busStops[stopIndex][name] = value;
+    setTrips(newTrips);
+  };
+
+  const addTrip = () => {
+    setTrips([
+      ...trips,
+      {
+        busRoute: [
+          {
+            from: {
+              cityName: "",
+              departureTime: "",
+              latitude: "",
+              longitude: "",
+            },
+            to: { cityName: "", arrivalTime: "", latitude: "", longitude: "" },
+          },
+        ],
+        busStops: [{ name: "", latitude: "", longitude: "" }],
+      },
     ]);
   };
 
-  const removeStop = (index) => {
-    if (stops.length > 1) {
-      const newStops = stops.filter((_, i) => i !== index);
-      setStops(newStops.map((stop, i) => ({ ...stop, order: i + 1 })));
+  const removeTrip = (tripIndex) => {
+    if (trips.length > 1) {
+      const newTrips = trips.filter((_, i) => i !== tripIndex);
+      setTrips(newTrips);
+    }
+  };
+
+  const addStop = (tripIndex) => {
+    const newTrips = [...trips];
+    newTrips[tripIndex].busStops.push({
+      name: "",
+      latitude: "",
+      longitude: "",
+    });
+    setTrips(newTrips);
+  };
+
+  const removeStop = (tripIndex, stopIndex) => {
+    const newTrips = [...trips];
+    if (newTrips[tripIndex].busStops.length > 1) {
+      newTrips[tripIndex].busStops = newTrips[tripIndex].busStops.filter(
+        (_, i) => i !== stopIndex
+      );
+      setTrips(newTrips);
     }
   };
 
@@ -109,34 +138,18 @@ function EditRouteForm() {
 
     const updatedRoute = {
       routeName,
-      origin: {
-        name: originName,
-        coordinates: {
-          latitude: parseFloat(originLatitude),
-          longitude: parseFloat(originLongitude),
-        },
-      },
-      destination: {
-        name: destinationName,
-        coordinates: {
-          latitude: parseFloat(destinationLatitude),
-          longitude: parseFloat(destinationLongitude),
-        },
-      },
-      stops: stops.map((stop, index) => ({
-        ...stop, // Keep existing _id if it exists
-        coordinates: {
-          latitude: parseFloat(stop.latitude),
-          longitude: parseFloat(stop.longitude),
-        },
-        order: index + 1,
-      })),
+      trips,
     };
 
     try {
       const response = await axios.patch(
         `http://localhost:5001/api/routes/${id}`,
-        updatedRoute
+        updatedRoute,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
       console.log("Route updated:", response.data);
       navigate("/routes");
@@ -182,195 +195,170 @@ function EditRouteForm() {
             required
           />
         </div>
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Origin</h2>
-          <div>
-            <label
-              htmlFor="originName"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
-              Name:
-            </label>
-            <input
-              type="text"
-              id="originName"
-              name="originName"
-              value={originName}
-              onChange={handleInputChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div className="flex space-x-4">
-            <div className="w-1/2">
-              <label
-                htmlFor="originLatitude"
-                className="block text-gray-700 text-sm font-bold mb-2"
-              >
-                Latitude:
-              </label>
-              <input
-                type="number"
-                id="originLatitude"
-                name="originLatitude"
-                value={originLatitude}
-                onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-            <div className="w-1/2">
-              <label
-                htmlFor="originLongitude"
-                className="block text-gray-700 text-sm font-bold mb-2"
-              >
-                Longitude:
-              </label>
-              <input
-                type="number"
-                id="originLongitude"
-                name="originLongitude"
-                value={originLongitude}
-                onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-          </div>
-        </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2">Destination</h2>
-          <div>
-            <label
-              htmlFor="destinationName"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
-              Name:
-            </label>
-            <input
-              type="text"
-              id="destinationName"
-              name="destinationName"
-              value={destinationName}
-              onChange={handleInputChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div className="flex space-x-4">
-            <div className="w-1/2">
-              <label
-                htmlFor="destinationLatitude"
-                className="block text-gray-700 text-sm font-bold mb-2"
-              >
-                Latitude:
-              </label>
-              <input
-                type="number"
-                id="destinationLatitude"
-                name="destinationLatitude"
-                value={destinationLatitude}
-                onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-            <div className="w-1/2">
-              <label
-                htmlFor="destinationLongitude"
-                className="block text-gray-700 text-sm font-bold mb-2"
-              >
-                Longitude:
-              </label>
-              <input
-                type="number"
-                id="destinationLongitude"
-                name="destinationLongitude"
-                value={destinationLongitude}
-                onChange={handleInputChange}
-                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                required
-              />
-            </div>
-          </div>
-        </div>
+          <h2 className="text-xl font-semibold mb-2">Trips</h2>
+          {trips.map((trip, tripIndex) => (
+            <div key={tripIndex} className="border p-4 rounded-md mb-4">
+              <h3 className="text-lg font-semibold mb-2">
+                Trip {tripIndex + 1}
+              </h3>
 
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Stops</h2>
-          {stops.map((stop, index) => (
-            <div
-              key={stop._id || index}
-              className="flex space-x-4 mb-2 items-center"
-            >
-              <div className="w-2/5">
-                <label
-                  htmlFor={`stopName-${index}`}
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Stop {index + 1} Name:
-                </label>
-                <input
-                  type="text"
-                  id={`stopName-${index}`}
-                  name="name"
-                  value={stop.name}
-                  onChange={(event) => handleStopChange(index, event)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
+              <div className="mb-2">
+                <h4 className="text-md font-semibold mb-1">Bus Route</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      From:
+                    </label>
+                    <input
+                      type="text"
+                      name={`from.cityName`}
+                      value={trip.busRoute[0].from.cityName}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      placeholder="City Name"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                    <input
+                      type="time"
+                      name={`from.departureTime`}
+                      value={trip.busRoute[0].from.departureTime}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-1"
+                    />
+                    <input
+                      type="number"
+                      name={`from.latitude`}
+                      value={trip.busRoute[0].from.latitude}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      placeholder="Latitude"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-1"
+                    />
+                    <input
+                      type="number"
+                      name={`from.longitude`}
+                      value={trip.busRoute[0].from.longitude}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      placeholder="Longitude"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 text-sm font-bold mb-1">
+                      To:
+                    </label>
+                    <input
+                      type="text"
+                      name={`to.cityName`}
+                      value={trip.busRoute[0].to.cityName}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      placeholder="City Name"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    />
+                    <input
+                      type="time"
+                      name={`to.arrivalTime`}
+                      value={trip.busRoute[0].to.arrivalTime}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-1"
+                    />
+                    <input
+                      type="number"
+                      name={`to.latitude`}
+                      value={trip.busRoute[0].to.latitude}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      placeholder="Latitude"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-1"
+                    />
+                    <input
+                      type="number"
+                      name={`to.longitude`}
+                      value={trip.busRoute[0].to.longitude}
+                      onChange={(event) => handleTripChange(tripIndex, event)}
+                      placeholder="Longitude"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mt-1"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="w-1/5">
-                <label
-                  htmlFor={`stopLatitude-${index}`}
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Latitude:
-                </label>
-                <input
-                  type="number"
-                  id={`stopLatitude-${index}`}
-                  name="latitude"
-                  value={stop.latitude}
-                  onChange={(event) => handleStopChange(index, event)}
-                  className="shadow  border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              <div className="w-1/5">
-                <label
-                  htmlFor={`stopLongitude-${index}`}
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                >
-                  Longitude:
-                </label>
-                <input
-                  type="number"
-                  id={`stopLongitude-${index}`}
-                  name="longitude"
-                  value={stop.longitude}
-                  onChange={(event) => handleStopChange(index, event)}
-                  className="shadow  border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  required
-                />
-              </div>
-              {stops.length > 1 && (
+
+              <div className="mb-2">
+                <h4 className="text-md font-semibold mb-1">Bus Stops</h4>
+                {trip.busStops.map((stop, stopIndex) => (
+                  <div
+                    key={stopIndex}
+                    className="flex space-x-4 mb-2 items-center"
+                  >
+                    <input
+                      type="text"
+                      name="name"
+                      value={stop.name}
+                      onChange={(event) =>
+                        handleStopChange(tripIndex, stopIndex, event)
+                      }
+                      placeholder={`Stop ${stopIndex + 1} Name`}
+                      className="shadow appearance-none border rounded w-2/5 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      required
+                    />
+                    <input
+                      type="number"
+                      name="latitude"
+                      value={stop.latitude}
+                      onChange={(event) =>
+                        handleStopChange(tripIndex, stopIndex, event)
+                      }
+                      placeholder="Latitude"
+                      className="shadow appearance-none border rounded w-1/5 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      required
+                    />
+                    <input
+                      type="number"
+                      name="longitude"
+                      value={stop.longitude}
+                      onChange={(event) =>
+                        handleStopChange(tripIndex, stopIndex, event)
+                      }
+                      placeholder="Longitude"
+                      className="shadow appearance-none border rounded w-1/5 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      required
+                    />
+                    {trip.busStops.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeStop(tripIndex, stopIndex)}
+                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
                 <button
                   type="button"
-                  onClick={() => removeStop(index)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  onClick={() => addStop(tripIndex)}
+                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 >
-                  Remove
+                  Add Stop
+                </button>
+              </div>
+
+              {trips.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeTrip(tripIndex)}
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
+                >
+                  Remove Trip
                 </button>
               )}
             </div>
           ))}
           <button
             type="button"
-            onClick={addStop}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            onClick={addTrip}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
           >
-            Add Stop
+            Add Trip
           </button>
         </div>
 

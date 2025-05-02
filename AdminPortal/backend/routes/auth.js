@@ -4,29 +4,62 @@ const router = express.Router();
 const AdminUser = require('../models/adminUser');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+//Function To generate a refresh token 
+
+const generateRefreshToken = () => {
+    return crypto.randomBytes(64).toString('hex');
+};
 
 // TEMPORARY LOGIN ROUTE FOR TESTING SUPER ADMIN
 router.post('/login', async (req, res) => {
-    console.log("function Executed");
     const { username, password } = req.body;
 
     try {
         const user = await AdminUser.findOne({ username });
-        if (!user) {
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        const isPasswordValid = await user.comparePassword(password); // Using the comparePassword method from the model
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
+        const accessToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Short expiration
+        const refreshToken = generateRefreshToken();
+        user.refreshToken = refreshToken; // Store refresh token in database
+        await user.save();
 
-        const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Adjust expiry as needed
-
-        res.json({ token, user: { _id: user._id, username: user.username, role: user.role } });
+        res.json({ accessToken, refreshToken, user: { _id: user._id, username: user.username, role: user.role } });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Login failed' });
+    }
+});
+
+// New /refresh route
+router.post('/refresh', async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token required' });
+    }
+
+    try {
+        const user = await AdminUser.findOne({ refreshToken });
+        if (!user) {
+            return res.status(403).json({ message: 'Invalid refresh token' });
+        }
+
+        // In a real application, you might want to verify the refresh token's signature as well
+        // using a separate secret or a more robust mechanism.
+
+        const newAccessToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '15m' });
+        const newRefreshToken = generateRefreshToken();
+        user.refreshToken = newRefreshToken;
+        await user.save();
+
+        res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+    } catch (error) {
+        console.error('Refresh token error:', error);
+        res.status(500).json({ message: 'Failed to refresh token' });
     }
 });
 

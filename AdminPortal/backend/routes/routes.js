@@ -1,73 +1,95 @@
 const express = require('express');
 const router = express.Router();
 const Route = require('../models/route');
+const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
 
-// GET all routes
-router.get('/', async (req, res) => {
+// GET all routes (role-based access)
+router.get('/', requireAuth, async (req, res) => {
     try {
-        const routes = await Route.find();
-        res.json(routes);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+        if (req.user.role === 'superadmin') {
+            const allRoutes = await Route.find();
+            return res.status(200).json(allRoutes);
+        } else if (req.user.role === 'admin') {
+            const userRoutes = await Route.find({ owner: req.user._id });
+            return res.status(200).json(userRoutes);
+        } else {
+            return res.status(403).json({ message: 'Unauthorized to access route data' });
+        }
+    } catch (error) {
+        console.error('Error fetching routes:', error);
+        res.status(500).json({ message: 'Failed to fetch routes' });
     }
 });
 
-// GET a specific route by ID
-router.get('/:id', async (req, res) => {
+// Route to get a specific route by ID (role-based access)
+router.get('/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
     try {
-        const route = await Route.findById(req.params.id);
+        const route = await Route.findById(id);
         if (!route) {
             return res.status(404).json({ message: 'Route not found' });
         }
-        res.json(route);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+
+        if (req.user.role === 'superadmin') {
+            return res.status(200).json(route);
+        } else if (req.user.role === 'admin') {
+            if (route.owner.toString() === req.user._id.toString()) {
+                return res.status(200).json(route);
+            } else {
+                return res.status(403).json({ message: 'Unauthorized to access this route' });
+            }
+        } else {
+            return res.status(403).json({ message: 'Unauthorized to access route data' });
+        }
+    } catch (error) {
+        console.error('Error fetching route by ID:', error);
+        res.status(500).json({ message: 'Failed to fetch route' });
     }
 });
 
-// POST a new route
-router.post('/', async (req, res) => {
-    // console.log('Received request body:', req.body);
-    const { routeName, origin, destination, stops } = req.body;
-    // console.log('Extracted routeName:', routeName);
-
-    const newRoute = new Route({
-        routeName: routeName, // Explicitly set it again
-        origin: origin,
-        destination: destination,
-        stops: stops,
-    });
-
-    // console.log('New Route object before save:', newRoute); // Log the entire object
-
+// Route to add a new route (requires authentication and sets owner)
+router.post('/', requireAuth, async (req, res) => {
     try {
+        const { routeName, trips } = req.body;
+
+        const newRoute = new Route({
+            routeName,
+            trips,
+            owner: req.user._id,
+        });
+
         const savedRoute = await newRoute.save();
         res.status(201).json(savedRoute);
-    } catch (err) {
-        console.error('Error saving route:', err);
-        res.status(400).json({ message: err.message }); // Send the full error message
+    } catch (error) {
+        console.error('Error creating route:', error);
+        res.status(500).json({ message: 'Failed to create route' });
     }
 });
 
 // PATCH (update) an existing route by ID
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireAuth, async (req, res) => {
     try {
-        const { routeName, origin, destination, stops } = req.body;
+        const { routeName, trips } = req.body;
+        const route = await Route.findById(req.params.id);
+
+        if (!route) {
+            return res.status(404).json({ message: 'Route not found.' });
+        }
+
+        // Authorization check for admin users
+        if (req.user.role === 'admin' && route.owner.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Unauthorized to update this route.' });
+        }
+
         const updatedRoute = await Route.findByIdAndUpdate(
             req.params.id,
             {
                 routeName,
-                origin,
-                destination,
-                stops: stops.map(stop => ({ ...stop, _id: undefined })), // Remove _id from existing stops to avoid issues
+                trips,
                 updatedAt: Date.now(),
             },
             { new: true, runValidators: true } // Return the updated document and run validators
         );
-
-        if (!updatedRoute) {
-            return res.status(404).json({ message: 'Route not found.' });
-        }
 
         res.json(updatedRoute);
     } catch (error) {
@@ -77,13 +99,21 @@ router.patch('/:id', async (req, res) => {
 });
 
 // DELETE a route by ID
-router.delete('/:id', async (req, res) => {
-    console.log(req.body);
+router.delete('/:id', requireAuth, async (req, res) => {
     try {
-        const deletedRoute = await Route.findByIdAndDelete(req.params.id);
-        if (!deletedRoute) {
+        const route = await Route.findById(req.params.id);
+
+        if (!route) {
             return res.status(404).json({ message: 'Route not found' });
         }
+
+        // Authorization check for admin users
+        if (req.user.role === 'admin' && route.owner.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Unauthorized to delete this route.' });
+        }
+
+        const deletedRoute = await Route.findByIdAndDelete(req.params.id);
+
         res.json({ message: 'Route deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });

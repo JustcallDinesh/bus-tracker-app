@@ -15,7 +15,12 @@ function NotificationsPage() {
       setError("");
       try {
         const response = await axios.get(
-          "http://localhost:5001/api/notifications"
+          "http://localhost:5001/api/notifications",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
         );
         setNotifications(response.data);
         setLoading(false);

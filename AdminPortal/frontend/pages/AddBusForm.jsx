@@ -4,7 +4,6 @@ import axios from "axios";
 
 function AddBusForm() {
   const navigate = useNavigate();
-  const [registrationNumber, setRegistrationNumber] = useState("");
   const [busName, setBusName] = useState("");
   const [model, setModel] = useState("");
   const [capacity, setCapacity] = useState("");
@@ -13,13 +12,19 @@ function AddBusForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loadingRoutes, setLoadingRoutes] = useState(true);
   const [routesError, setRoutesError] = useState("");
+  const [busNumber, setBusNumber] = useState("");
+  const [busType, setBusType] = useState("private"); // Default to private
 
   useEffect(() => {
     const fetchRoutes = async () => {
       setLoadingRoutes(true);
       setRoutesError("");
       try {
-        const response = await axios.get("http://localhost:5001/api/routes");
+        const response = await axios.get("http://localhost:5001/api/routes", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
         setRoutesList(response.data);
         setLoadingRoutes(false);
       } catch (error) {
@@ -40,9 +45,6 @@ function AddBusForm() {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     switch (name) {
-      case "registrationNumber":
-        setRegistrationNumber(value);
-        break;
       case "busName":
         setBusName(value);
         break;
@@ -55,6 +57,12 @@ function AddBusForm() {
       case "route":
         setRoute(value);
         break;
+      case "busNumber":
+        setBusNumber(value);
+        break;
+      case "busType":
+        setBusType(value);
+        break;
       default:
         break;
     }
@@ -65,17 +73,24 @@ function AddBusForm() {
     setErrorMessage("");
 
     const newBus = {
-      registrationNumber,
       busName,
+      busNumber,
       model,
       capacity: parseInt(capacity, 10),
       assignedRoute: route,
+      busType, // Include busType in the request
     };
 
     try {
+      console.log(newBus);
       const response = await axios.post(
         "http://localhost:5001/api/buses",
-        newBus
+        newBus,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
       console.log("Bus saved:", response.data);
       navigate("/buses");
@@ -105,23 +120,6 @@ function AddBusForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
-            htmlFor="registrationNumber"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
-            Registration Number:
-          </label>
-          <input
-            type="text"
-            id="registrationNumber"
-            name="registrationNumber"
-            value={registrationNumber}
-            onChange={handleInputChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            required
-          />
-        </div>
-        <div>
-          <label
             htmlFor="busName"
             className="block text-gray-700 text-sm font-bold mb-2"
           >
@@ -137,6 +135,59 @@ function AddBusForm() {
             required
           />
         </div>
+        <div>
+          <label
+            htmlFor="busNumber"
+            className="block text-gray-700 text-sm font-bold mb-2"
+          >
+            Bus Number:
+          </label>
+          <input
+            type="text"
+            id="busNumber"
+            name="busNumber"
+            value={busNumber}
+            onChange={handleInputChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          />
+        </div>
+        <div>
+          <h2 className="block text-gray-700 text-sm font-bold mb-2">
+            Bus Type
+          </h2>
+          <div className="flex items-center space-x-4">
+            <div>
+              <input
+                type="radio"
+                id="private"
+                name="busType"
+                value="private"
+                checked={busType === "private"}
+                onChange={handleInputChange}
+                className="form-radio h-5 w-5 text-blue-600"
+              />
+              <label htmlFor="private" className="ml-2 text-gray-700">
+                Private
+              </label>
+            </div>
+            <div>
+              <input
+                type="radio"
+                id="government"
+                name="busType"
+                value="government"
+                checked={busType === "government"}
+                onChange={handleInputChange}
+                className="form-radio h-5 w-5 text-blue-600"
+              />
+              <label htmlFor="government" className="ml-2 text-gray-700">
+                Government
+              </label>
+            </div>
+          </div>
+        </div>
+
         <div>
           <label
             htmlFor="model"

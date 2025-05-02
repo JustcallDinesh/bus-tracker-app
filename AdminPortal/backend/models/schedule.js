@@ -22,6 +22,7 @@ const scheduleSchema = new mongoose.Schema({
     startDate: { type: Date },
     endDate: { type: Date },
     notes: { type: String },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'adminUser', required: true },
     createdAt: {
         type: Date,
         default: Date.now,

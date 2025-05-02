@@ -4,67 +4,41 @@ const routeSchema = new mongoose.Schema({
     routeName: {
         type: String,
         required: true,
-        unique: true,
+
     },
-    origin: {
-        name: {
-            type: String,
-            required: true
-        },
-        coordinates: {
-            latitude: {
-                type: Number,
-                required: true
-            },
-            longitude: {
-                type: Number,
-                required: true
-            }
-        }
-    },
-    destination: {
-        name: {
-            type: String,
-            required: true
-        },
-        coordinates: {
-            latitude: {
-                type: Number,
-                required: true
-            },
-            longitude: {
-                type: Number,
-                required: true
-            }
-        }
-    },
-    stops: [
+    trips: [
         {
-            name: {
-                type: String,
-                required: true
-            },
-            coordinates: {
-                latitude: {
-                    type: Number,
-                    required: true
+            busRoute: [
+                {
+                    from: {
+                        cityName: String,
+                        departureTime: String,
+                        latitude: Number,
+                        longitude: Number,
+                    },
+                    to: {
+                        cityName: String,
+                        arrivalTime: String,
+                        latitude: Number,
+                        longitude: Number,
+                    },
                 },
-                longitude: {
-                    type: Number,
-                    required: true
-                }
-            },
-            order: {
-                type: Number,
-                required: true
-            }
-        }
+            ],
+            busStops: [
+                {
+                    name: { type: String, required: true },
+                    latitude: { type: Number },
+                    longitude: { type: Number },
+                },
+            ],
+        },
     ],
     status: {
         type: String,
         enum: ['Active', 'Inactive'],
         default: 'Active'
     },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'adminUser', required: true },
     createdAt: {
         type: Date,
         default: Date.now

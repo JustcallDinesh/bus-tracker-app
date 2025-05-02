@@ -47,6 +47,7 @@ const AddScreen = () => {
 
   const [busType, setbusType] = useState([]);
   const [amenities, setAmenities] = useState([]);
+  const [capacity, setCapacity] = useState('');
 
   const [isGovernt, setisGovernt] = useState(true);
 
@@ -148,10 +149,11 @@ const AddScreen = () => {
         busNumber,
         busType,
         amenities,
+        capacity,
         trips, // Send the trips array
         busStops,
         isGovernt,
-        busImageUri,
+        // busImageUri,
       });
 
       if (response.status === 201) {
@@ -208,6 +210,13 @@ const AddScreen = () => {
         </Text>
         <Switch color="teal" value={isGovernt} onValueChange={setisGovernt} />
       </View>
+      <TextInput
+        autoComplete='off'
+        style={styles.input}
+        placeholder="Bus Capacity"
+        value={capacity}
+        onChangeText={setCapacity}
+      />
 
       <View style={styles.checkboxContainer}>
         <View style={styles.selectBusTitle}><Text style={styles.selectBusheader}>Select Bus Type </Text></View>

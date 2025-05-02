@@ -20,7 +20,12 @@ function EditAdminUserForm() {
       setError("");
       try {
         const response = await axios.get(
-          `http://localhost:5001/api/admin/users/${id}`
+          `http://localhost:5001/api/admin/users/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
         );
         const userData = response.data;
         setUsername(userData.username);
@@ -83,7 +88,12 @@ function EditAdminUserForm() {
     try {
       const response = await axios.patch(
         `http://localhost:5001/api/admin/users/${id}`,
-        updatedAdminUser
+        updatedAdminUser,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        }
       );
       console.log("Admin user updated:", response.data);
       navigate("/admin/users");
@@ -166,7 +176,7 @@ function EditAdminUserForm() {
             Leave blank to keep the current password.
           </p>
         </div>
-        <div>
+        {/* <div>
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Roles:
           </label>
@@ -177,7 +187,7 @@ function EditAdminUserForm() {
                 id="role-superadmin"
                 name="roles"
                 value="superadmin"
-                checked={roles.includes("superadmin")}
+                // checked={roles.includes("superadmin")}
                 onChange={handleRoleChange}
               />
               <label
@@ -193,7 +203,7 @@ function EditAdminUserForm() {
                 id="role-admin"
                 name="roles"
                 value="admin"
-                checked={roles.includes("admin")}
+                // checked={roles.includes("admin")}
                 onChange={handleRoleChange}
               />
               <label
@@ -209,7 +219,7 @@ function EditAdminUserForm() {
                 id="role-editor"
                 name="roles"
                 value="editor"
-                checked={roles.includes("editor")}
+                // checked={roles.includes("editor")}
                 onChange={handleRoleChange}
               />
               <label
@@ -225,7 +235,7 @@ function EditAdminUserForm() {
                 id="role-viewer"
                 name="roles"
                 value="viewer"
-                checked={roles.includes("viewer")}
+                // checked={roles.includes("viewer")}
                 onChange={handleRoleChange}
               />
               <label
@@ -236,7 +246,7 @@ function EditAdminUserForm() {
               </label>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex space-x-4">
           <button

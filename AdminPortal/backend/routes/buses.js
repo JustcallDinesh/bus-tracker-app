@@ -3,20 +3,59 @@ const express = require('express');
 const router = express.Router();
 const Bus = require('../models/bus');
 const Route = require('../models/route'); // Import the Route model
+const { requireAuth, requireSuperAdmin } = require('../middleware/auth');
 
-// GET all buses with populated route information
-router.get('/', async (req, res) => {
 
+// Route to get buses (role-based access)
+router.get('/', requireAuth, async (req, res) => {
     try {
-        const buses = await Bus.find().populate('assignedRoute', 'routeName'); // Populate the 'assignedRoute' field, selecting only 'routeName'
-        res.json(buses);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+        if (req.user.role === 'superadmin') {
+            // Super Admin can see all buses
+            const allBuses = await Bus.find();
+            return res.status(200).json(allBuses);
+        } else if (req.user.role === 'admin') {
+            // Regular admin users (e.g., bus owners/operators) can only see their buses
+            // You'll need a way to associate buses with admin users (e.g., a 'owner' field in the Bus model referencing the AdminUser)
+            const userBuses = await Bus.find({ owner: req.user._id }).populate("assignedRoute");
+            return res.status(200).json(userBuses);
+        } else {
+            return res.status(403).json({ message: 'Unauthorized to access bus data' });
+        }
+    } catch (error) {
+        console.error('Error fetching buses:', error);
+        res.status(500).json({ message: 'Failed to fetch buses' });
+    }
+});
+
+// Route to get a specific bus by ID (role-based access)
+router.get('/:id', requireAuth, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const bus = await Bus.findById(id);
+        if (!bus) {
+            return res.status(404).json({ message: 'Bus not found' });
+        }
+
+        if (req.user.role === 'superadmin') {
+            return res.status(200).json(bus);
+        } else if (req.user.role === 'admin') {
+            // Ensure the bus belongs to the logged-in admin user
+            if (bus.owner.toString() === req.user._id.toString()) {
+                return res.status(200).json(bus);
+            } else {
+                return res.status(403).json({ message: 'Unauthorized to access this bus' });
+            }
+        } else {
+            return res.status(403).json({ message: 'Unauthorized to access bus data' });
+        }
+    } catch (error) {
+        console.error('Error fetching bus by ID:', error);
+        res.status(500).json({ message: 'Failed to fetch bus' });
     }
 });
 
 // GET a specific bus by ID with populated route information
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
     try {
         const bus = await Bus.findById(req.params.id).populate('assignedRoute', 'routeName');
         if (!bus) {
@@ -29,8 +68,9 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST a new bus
-router.post('/', async (req, res) => {
-    const { registrationNumber, capacity, busName, model, assignedRoute } = req.body;
+router.post('/', requireAuth, async (req, res) => {
+    const { busNumber, busTypegvt, capacity, busName, model, assignedRoute } = req.body;
+    // console.log(req.body);
 
     // Validate assignedRoute (optional, but good practice)
     if (assignedRoute) {
@@ -40,12 +80,16 @@ router.post('/', async (req, res) => {
         }
     }
 
+
+
     const newBus = new Bus({
-        registrationNumber,
+        busNumber,
         capacity,
         busName,
         model,
         assignedRoute,
+        busTypegvt,
+        owner: req.user._id,
     });
 
     try {
@@ -61,8 +105,8 @@ router.post('/', async (req, res) => {
 });
 
 // PATCH (update) an existing bus by ID
-router.patch('/:id', async (req, res) => {
-    const { registrationNumber, capacity, busName, model, assignedRoute } = req.body;
+router.patch('/:id', requireAuth, async (req, res) => {
+    const { busNumber, isGovernt, busTypegvt, capacity, busName, model, assignedRoute, } = req.body;
 
     // Validate assignedRoute (optional, but good practice)
     if (assignedRoute) {
@@ -73,9 +117,9 @@ router.patch('/:id', async (req, res) => {
     }
 
     try {
-        const updatedBus = await Bus.findByIdAndUpdate(
+        const updatedBus = await AdminBus.findByIdAndUpdate(
             req.params.id,
-            { registrationNumber, capacity, busName, model, assignedRoute, updatedAt: Date.now() },
+            { busNumber, isGovernt, capacity, busName, model, assignedRoute, busTypegvt, updatedAt: Date.now() },
             { new: true, runValidators: true }
         ).populate('assignedRoute', 'routeName'); // Populate on update
         if (!updatedBus) {
@@ -83,9 +127,7 @@ router.patch('/:id', async (req, res) => {
         }
         res.json(updatedBus);
     } catch (err) {
-        if (err.code === 11000) {
-            return res.status(400).json({ message: 'Registration number already exists' });
-        }
+        console.log(err.message);
         res.status(400).json({ message: err.message });
     }
 });
