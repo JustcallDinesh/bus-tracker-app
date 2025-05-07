@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Icons from 'react-native-vector-icons/MaterialCommunityIcons';
 import VerticalLine from './VerticalLine';
 import SearchFields from './SearchFeilds';
+import NoRouteFounds from '../Components/NoRouteFounds';
 
 const SearchResultsScreen = ({ navigation, route }) => {
   const { searchResults, from, to, date } = route.params;
@@ -78,6 +79,8 @@ const SearchResultsScreen = ({ navigation, route }) => {
 
   const RouteDetailedView = ({ route }) => { // Receive from and to as props
 
+    // console.log(route);
+
     const amenityIcons = {
       'ChargingPort': 'cellphone-charging',
       'Wifi': 'wifi',
@@ -146,24 +149,46 @@ const SearchResultsScreen = ({ navigation, route }) => {
 
     // console.log(from, to, "-----------");
 
-    for (const trip of route?.trips) {
-      for (const routeSegment of trip?.busRoute) {
-        const fromCity = routeSegment.from?.cityName?.trim().toLowerCase();
-        const toCity = routeSegment.to?.cityName?.trim().toLowerCase();
-        const searchedFrom = from?.trim().toLowerCase();
-        const searchedTo = to?.trim().toLowerCase();
+    if (route.trips.length > 0) {
+      for (const trip of route?.trips) {
+        for (const routeSegment of trip?.busRoute) {
+          const fromCity = routeSegment.from?.cityName?.trim().toLowerCase();
+          const toCity = routeSegment.to?.cityName?.trim().toLowerCase();
+          const searchedFrom = from?.trim().toLowerCase();
+          const searchedTo = to?.trim().toLowerCase();
 
-        if (fromCity === searchedFrom && toCity === searchedTo) {
-          matchingRouteSegment = routeSegment;
-          matchingTrip = trip;
-          // console.log("matchingRouteSegment correct", matchingRouteSegment);
+          if (fromCity === searchedFrom && toCity === searchedTo) {
+            matchingRouteSegment = routeSegment;
+            matchingTrip = trip;
+            break;
+          }
+        }
+        if (matchingRouteSegment) {
           break;
         }
       }
-      if (matchingRouteSegment) {
-        break;
+    } else {
+      for (const trip of route?.assignedRoute.trips) {
+        for (const routeSegment of trip?.busRoute) {
+          const fromCity = routeSegment.from?.cityName?.trim().toLowerCase();
+          const toCity = routeSegment.to?.cityName?.trim().toLowerCase();
+          const searchedFrom = from?.trim().toLowerCase();
+          const searchedTo = to?.trim().toLowerCase();
+
+          if (fromCity === searchedFrom && toCity === searchedTo) {
+            matchingRouteSegment = routeSegment;
+            matchingTrip = trip;
+            break;
+          }
+        }
+        if (matchingRouteSegment) {
+          break;
+        }
       }
+
+
     }
+
 
     return (
       <Animated.ScrollView showsVerticalScrollIndicator={false} style={{ flexGrow: 1 }} contentContainerStyle={{ paddingBottom: 80 }}>
@@ -177,6 +202,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
               <View style={styles.ratingContainer}>
                 <View style={styles.rating}>
                   <Icon name="star" size={12} color="white" style={styles.starIcon} />
+
                   <Text style={styles.ratingText}>4.5 </Text>
                 </View>
                 <View style={styles.ratingCount}>
@@ -191,21 +217,33 @@ const SearchResultsScreen = ({ navigation, route }) => {
             {matchingRouteSegment && (
               <View style={styles.progress}>
                 <View style={styles.progressItems}>
+
                   <View style={styles.totalorgin}>
                     <Text style={styles.location}>BUS ORIGIN</Text>
-                    <Text style={[styles.locationName,]}>{matchingRouteSegment.from?.cityName?.trim()}</Text>
-                    <Text style={styles.time}>{matchingRouteSegment.from && formatTimeFromISO(matchingRouteSegment.from.departureTime)}</Text>
+                    <View style={styles.locationName_container}>
+                      <Text style={[styles.locationName,]}>{matchingRouteSegment.from?.cityName?.trim()}</Text>
+                    </View>
+                    <View style={styles.time_container}>
+                      <Text style={styles.time}>{matchingRouteSegment.from.departureTime.length < 9 ? matchingRouteSegment.from.departureTime : formatTimeFromISO(matchingRouteSegment.from.departureTime)}</Text>
+                    </View>
                   </View>
+
                   <View style={styles.swap}>
                     <Icons name="swap-horizontal-circle" size={25} color="#fff" style={styles.iconsAme} />
                   </View>
-                  <View style={[styles.progressItem, styles.boarding]}>
-                    <View style={styles.totalorgin}>
-                      <Text style={[styles.location, styles.boardingLocation]}>DESTINATION</Text>
-                      <Text style={[styles.locationName, styles.boardingLocationName]}>{matchingRouteSegment.to?.cityName?.trim()}</Text>
-                      <Text style={styles.time}>{matchingRouteSegment.to && formatTimeFromISO(matchingRouteSegment.to.arrivalTime)}</Text>
+
+
+                  <View style={styles.totalorgin}>
+                    <Text style={styles.location}>DESTINATION</Text>
+                    <View style={styles.locationName_container}>
+                      <Text style={styles.locationName}>{matchingRouteSegment.to?.cityName?.trim()}</Text>
+                    </View>
+                    <View style={styles.time_container}>
+                      <Text style={styles.time}>{matchingRouteSegment.to.arrivalTime.length < 9 ? matchingRouteSegment.to.arrivalTime : formatTimeFromISO(matchingRouteSegment.to.arrivalTime)}</Text>
                     </View>
                   </View>
+
+
                 </View>
               </View>
             )}
@@ -261,9 +299,7 @@ const SearchResultsScreen = ({ navigation, route }) => {
 
   if (!searchResults || searchResults.length === 0) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.noRouteText}>No route found.</Text>
-      </View>
+      <NoRouteFounds />
     );
   }
 
@@ -330,15 +366,11 @@ const SearchResultsScreen = ({ navigation, route }) => {
                   if (fromCity === searchedFrom && toCity === searchedTo) {
                     displayedFrom = routeSegment.from.cityName;
                     displayedTo = routeSegment.to.cityName;
-                    departureTime = routeSegment.from.departureTime || formatTimeFromISO(routeSegment.from.departureTime);
-                    arrivalTime = routeSegment.to.arrivalTime || formatTimeFromISO(routeSegment.to.arrivalTime);
+                    departureTime = routeSegment.from.departureTime;
+                    arrivalTime = routeSegment.to.arrivalTime;
                     foundMatch = true;
-                    console.log(departureTime, arrivalTime)
+                    // console.log(departureTime, arrivalTime)
 
-                    // if (departureTime && arrivalTime) {
-                    //   let dep = departureTime.split(' ')
-                    //   console.log(dep);
-                    // }
                     break;
                   }
                 }
@@ -353,6 +385,8 @@ const SearchResultsScreen = ({ navigation, route }) => {
             if (!foundMatch) {
               return null; // Skip rendering if no matching route segment is found
             }
+
+
 
             return (
               <TouchableOpacity key={item._id?.$oid || String(Math.random())} style={styles.routeItem} onPress={() => setSelectedRoute(item)}>
@@ -814,11 +848,19 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   progressItems: {
-    // backgroundColor:'green',
+    // backgroundColor: 'green',
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    gap: 5,
+  },
+  totalorgin: {
+    flex: 1,
+    // backgroundColor: "blue",
+    minWidth: 140,
+
+
   },
   progressItem: {
     flexDirection: 'row',
@@ -844,39 +886,43 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     fontWeight: 'bold',
     maxWidth: 80,
-    textAlign: 'left',
+    textAlign: 'center',
     left: 35,
   },
+  locationName_container: {
+    padding: 2
+
+  },
   locationName: {
+    flex: 1,
     fontStyle: 'italic',
+    flexWrap: 'wrap',
     fontSize: 21,
     fontWeight: 'bold',
-    minWidth: 100,
     textAlign: 'center',
-    flex: 1
-
-  },
-  totalorgin: {
-    // backgroundColor:"blue",
-    minWidth: 140,
+    // paddingTop: 5,
 
   },
 
+  time_container: {
+    backgroundColor: '#EAEAEA',
+    borderRadius: 5,
+    maxWidth: 80,
+    marginTop: 5,
+    left: '25%',
+
+  },
   time: {
     fontStyle: 'italic',
     fontSize: 14,
     color: '#000',
-    backgroundColor: '#EAEAEA',
     padding: 5,
-    borderRadius: 5,
     textAlign: 'center',
-    marginTop: 5,
-    maxWidth: 70,
-    left: 35
   },
   swap: {
     position: 'absolute',
-    top: 30,
+    // flex: 1,
+    top: 18,
     left: 160,
   },
   line: {

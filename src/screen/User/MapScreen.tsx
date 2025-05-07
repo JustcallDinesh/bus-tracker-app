@@ -108,6 +108,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
   const fetchDirections = async () => {
     if (selectedRoute && selectedRoute.trips && selectedRoute.trips.length > 0) {
       const trip = selectedRoute.trips[0];
+      console.log("Ttrips", trip);
       if (trip.busRoute && trip.busStops) {
         let from = { ...trip.busRoute.from };
         let to = { ...trip.busRoute.to };
@@ -165,16 +166,20 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
         setSelectedRoute(updatedSelectedRoute);
 
         const waypointsString = validBusStops.map((stop) => `${stop.latitude},${stop.longitude}`).join("|");
+        // console.log("Way Ponit Sring", waypointsString);
 
         try {
           const response = await axios.get(
             `https://maps.googleapis.com/maps/api/directions/json?origin=${from.latitude},${from.longitude}&destination=${to.latitude},${to.longitude}&waypoints=${waypointsString}&key=${config.KeyToken}`
           );
+          // console.log(response.data)
+          // console.log(response.data.routes)
 
           if (response.data.routes && response.data.routes.length > 0) {
             const points = response.data.routes[0].overview_polyline.points;
             const decodedPoints = decodePolyline(points);
             setDirections(decodedPoints);
+            // console.log("-------------------------------------------------------------");
           } else {
             console.log("-------------------------------------------------------------");
           }

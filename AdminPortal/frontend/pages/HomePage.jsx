@@ -27,25 +27,26 @@ function HomePage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className=" flex justify-between">
-        <h1 className="text-3xl font-bold mb-6">Bus Tracker Admin Dashboard</h1>
-        <div className="container mx-auto p-6 flex gap-10">
+      <div className="flex  justify-between align-baseline  shadow-md mb-5">
+        <h1 className="text-2xl text-center font-bold ">
+          Bus Tracker Admin Dashboard
+        </h1>
+        <div className="container mx-auto p-6">
           {username && (
-            <p className="mb-4">
-              Welcome, <span className="font-semibold">{username}</span>!
+            <p className="text-lg text-center ">
+              Welcome, <span className="font-semibold italic">{username}</span>!
             </p>
           )}
-          <button
-            onClick={handleLogout}
-            className="bg-green-700 hover:bg-pink-600 cursor-pointer rounded-full text-white font-bold py-2 px-4 focus:outline-none focus:shadow-outline"
-          >
-            Logout
-          </button>
         </div>
+        <button
+          onClick={handleLogout}
+          className="bg-green-100 px-2 cursor-pointer text-md font-semibold hover:bg-green-300 transition-colors rounded-tr-md rounded-br-md"
+        >
+          Logout
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        ``
         <Link
           to="/routes"
           className="block p-6 bg-white rounded-md shadow-md hover:shadow-lg transition duration-300"

@@ -150,7 +150,7 @@ function AddRouteForm() {
             htmlFor="routeName"
             className="block text-gray-700 text-sm font-bold mb-2"
           >
-            Route Name:
+            Route Name :
           </label>
           <input
             type="text"
@@ -158,7 +158,7 @@ function AddRouteForm() {
             name="routeName"
             value={routeName}
             onChange={handleInputChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border-[.3px] border-cyan-600 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             required
           />
         </div>
@@ -166,7 +166,10 @@ function AddRouteForm() {
         <div>
           <h2 className="text-xl font-semibold mb-2">Trips</h2>
           {trips.map((trip, tripIndex) => (
-            <div key={tripIndex} className="border p-4 rounded-md mb-4">
+            <div
+              key={tripIndex}
+              className="border border-cyan-700 p-4 rounded-md mb-4"
+            >
               <h3 className="text-lg font-semibold mb-2">
                 Trip {tripIndex + 1}
               </h3>
@@ -198,7 +201,7 @@ function AddRouteForm() {
                         Departure Time:
                       </label>
                       <input
-                        type="text"
+                        type="time"
                         id={`fromTime-${tripIndex}-${routeIndex}`}
                         name={`from.departureTime-${tripIndex}-${routeIndex}`}
                         value={routeSegment.from?.departureTime || ""}
@@ -262,7 +265,7 @@ function AddRouteForm() {
                         Arrival Time:
                       </label>
                       <input
-                        type="text"
+                        type="time"
                         id={`toTime-${tripIndex}-${routeIndex}`}
                         name={`to.arrivalTime-${tripIndex}-${routeIndex}`}
                         value={routeSegment.to?.arrivalTime || ""}

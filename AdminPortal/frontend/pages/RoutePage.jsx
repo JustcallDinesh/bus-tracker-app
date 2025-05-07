@@ -133,14 +133,14 @@ function RoutesPage() {
       )}
 
       <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="xl:min-w-full divide-y divide-gray-200 ">
           <thead className="bg-gray-50">
-            <tr>
+            <tr className="bg-violet-200">
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                ID
+                S.No
               </th>
               <th
                 scope="col"
@@ -160,16 +160,28 @@ function RoutesPage() {
               >
                 Destination
               </th>
-              <th scope="col" className="relative px-6 py-3">
-                <span className="sr-only">Actions</span>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Status
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-center  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Action
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {routes.map((route) => (
-              <tr key={route._id}>
+            {routes.map((route, index) => (
+              <tr
+                key={route._id}
+                className="hover:bg-gray-100 transition-colors"
+              >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {route._id}
+                  {index + 1}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {route.routeName}
@@ -180,16 +192,21 @@ function RoutesPage() {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {route.trips[0].busRoute[0].to.cityName || "No Name"}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <p className="bg-green-400 p-1 text-center rounded-lg text-black">
+                    {route.status}
+                  </p>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link
                     to={`/routes/edit/${route._id}`}
-                    className="text-indigo-600 hover:text-indigo-900 mr-2"
+                    className="text-white hover:text-indigo-900 mr-2 bg-blue-500 p-1 px-4 rounded-sm"
                   >
                     Edit
                   </Link>
                   <button
                     onClick={() => handleDelete(route._id)}
-                    className="text-red-600 hover:text-red-900"
+                    className="text-white hover:text-red-900 bg-red-500 p-1 px-4 rounded-sm cursor-pointer"
                   >
                     Delete
                   </button>

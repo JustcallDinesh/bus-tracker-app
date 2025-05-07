@@ -6,17 +6,19 @@ const cors = require("cors");
 const multer = require("multer");
 const { types } = require("@babel/core");
 const upload = multer({ storage: multer.memoryStorage() });
+require('dotenv').config();
 // const busesRouter = require('../AdminPortal/backend/models/bus');
 // const routesRouter = require('../AdminPortal/backend/models/route');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+const uri = process.env.MONGODB;
 
 // MongoDB connection
 mongoose
   .connect(
-    "mongodb+srv://dinesh7091566641:k4IkpJ3VtOdaq5Q7@cluster0.tkhff.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+    uri,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,

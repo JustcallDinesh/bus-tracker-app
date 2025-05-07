@@ -117,7 +117,7 @@ router.patch('/:id', requireAuth, async (req, res) => {
     }
 
     try {
-        const updatedBus = await AdminBus.findByIdAndUpdate(
+        const updatedBus = await Bus.findByIdAndUpdate(
             req.params.id,
             { busNumber, isGovernt, capacity, busName, model, assignedRoute, busTypegvt, updatedAt: Date.now() },
             { new: true, runValidators: true }
