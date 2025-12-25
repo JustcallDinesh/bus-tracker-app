@@ -4,7 +4,6 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const multer = require("multer");
-const { types } = require("@babel/core");
 const upload = multer({ storage: multer.memoryStorage() });
 require('dotenv').config();
 // const busesRouter = require('../AdminPortal/backend/models/bus');
@@ -13,19 +12,17 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-const uri = process.env.MONGODB;
+const uri = process.env.MONGODB
 
-// MongoDB connection
-mongoose
-  .connect(
-    uri,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+// MongoDB connection (only attempt if URI is provided)
+if (uri) {
+  mongoose
+    .connect(uri)
+    .then(() => console.log("MongoDB Connected"))
+    .catch((err) => console.error("MongoDB Connection Error:", err));
+} else {
+  console.warn('MONGODB environment variable is not set. Skipping MongoDB connection.');
+}
 
 // User Schema and Model
 const userSchema = new mongoose.Schema({
@@ -253,12 +250,13 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(email, password);
 
     const user = await User.findOne({ email, password });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    const token = jwt.sign({ userId: user._id }, "k4IkpJ3VtOdaq5Q7");
+    const token = jwt.sign({ userId: user._id }, "7SHAyGU0kCEdj5Jm");
     res.json({ token });
   } catch (err) {
     console.error("Login Error:", err);
@@ -270,6 +268,7 @@ app.post("/login", async (req, res) => {
 app.get("/profile", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
+    // console.log("Fetched user:", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -405,7 +404,8 @@ app.get("/findRoutes", async (req, res) => {
 // Modified Initial Data Endpoint (populating origin and destination)
 app.get("/initialNewRoutes", async (req, res) => {
   try {
-    const allBuses = await NewBus.find().populate('assignedRoute'); // Populate the entire assignedRoute
+    // Use the `Bus` model (NewBus was not defined)
+    const allBuses = await Bus.find().populate('assignedRoute');
     res.status(200).json(allBuses);
   } catch (error) {
     console.error("Error fetching initial new buses:", error);
@@ -414,7 +414,7 @@ app.get("/initialNewRoutes", async (req, res) => {
 });
 
 //////////////////////////////////////////////
-
+//7SHAyGU0kCEdj5Jm
 /////////////////////////////////////////////
 
 const PORT = process.env.PORT || 5000;

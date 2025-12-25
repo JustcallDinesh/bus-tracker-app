@@ -19,6 +19,7 @@ function LoginForm() {
         username,
         password,
       });
+      console.log("Response from server:", response);
       const { accessToken, refreshToken, user } = response.data;
 
       console.log(response.data);
